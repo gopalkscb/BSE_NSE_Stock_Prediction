@@ -1,8 +1,7 @@
 {
-  "enabled": true,
   "name": "Analyze New Code File",
+  "version": "1.0.0",
   "description": "Analyzes every new code file created (any language) for syntax errors, bugs, security vulnerabilities, and code quality issues, then reports findings to the user.",
-  "version": "1",
   "when": {
     "type": "fileCreated",
     "patterns": [
@@ -28,7 +27,6 @@
       "**/*.sh",
       "**/*.yaml",
       "**/*.yml",
-      "**/*.json",
       "**/*.html",
       "**/*.css",
       "**/*.scss"

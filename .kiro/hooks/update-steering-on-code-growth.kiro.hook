@@ -1,16 +1,19 @@
 {
-  "enabled": true,
   "name": "Update Steering on Large Code Changes",
-  "description": "Triggers an agent to review and update the steering files whenever a Python file is saved that contains 200 or more lines of code, keeping project documentation in sync with the evolving codebase.",
-  "version": "1",
+  "version": "1.0.0",
+  "description": "Triggers an agent to review and update the steering files whenever a Python or JSX/JS file is saved that contains 50 or more lines of code, keeping project documentation in sync with the evolving codebase.",
   "when": {
     "type": "fileEdited",
     "patterns": [
-      "**/*.py"
+      "**/*.py",
+      "**/*.jsx",
+      "**/*.js",
+      "**/*.ts",
+      "**/*.tsx"
     ]
   },
   "then": {
     "type": "askAgent",
-    "prompt": "A Python file was just saved. Check if the file that was edited has 200 or more lines of code. If it does, review the current steering files in `.kiro/steering/` (product.md, structure.md, tech.md) and update them as needed to reflect any new modules, patterns, libraries, architectural decisions, or conventions introduced by the recent code changes. Keep the steering files accurate and up to date with the current state of the codebase."
+    "prompt": "A code file was just saved. Check if the file that was edited has 50 or more lines of code. If it does, review the current steering files in `.kiro/steering/` (product.md, structure.md, tech.md) and update them as needed to reflect any new modules, patterns, libraries, architectural decisions, or conventions introduced by the recent code changes. Keep the steering files accurate and up to date with the current state of the codebase."
   }
 }

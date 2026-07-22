@@ -1,0 +1,314 @@
+{
+  "categories": [
+    {
+      "id": "data-fetch-errors",
+      "name": "Data Fetch Errors",
+      "entries": [
+        {
+          "id": "faq-001",
+          "question": "Why does a ticker return 'insufficient_data'?",
+          "answer": "The ticker has fewer than 50 trading days of OHLCV data from yfinance. This happens with recently listed IPOs, suspended stocks, or incorrect ticker suffixes. Ensure tickers use .NS for NSE and .BO for BSE.",
+          "tags": ["yfinance", "data", "insufficient", "validation"],
+          "related_metric": "failed_ticker_rate"
+        },
+        {
+          "id": "faq-002",
+          "question": "What causes a 'failed' fetch status?",
+          "answer": "A network timeout, yfinance API rate limiting, or invalid ticker symbol. The system logs the exact exception. Check your internet connection and try again after 60 seconds if rate-limited.",
+          "tags": ["yfinance", "network", "timeout", "rate-limit"],
+          "related_metric": "fetch_ticker_duration_ms"
+        },
+        {
+          "id": "faq-003",
+          "question": "Why are some tickers skipped in partial failure?",
+          "answer": "The system uses graceful degradation: if some tickers fail but others succeed, it returns results for successful ones and lists failures separately. This prevents one bad ticker from blocking the entire analysis.",
+          "tags": ["partial-failure", "resilience", "batch"],
+          "related_metric": "failed_ticker_rate"
+        },
+        {
+          "id": "faq-004",
+          "question": "What is the correct ticker format for NSE stocks?",
+          "answer": "Use the symbol followed by .NS suffix. Example: RELIANCE.NS, TCS.NS, INFY.NS. The suffix tells yfinance to query the National Stock Exchange of India.",
+          "tags": ["ticker-format", "NSE", "suffix"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-005",
+          "question": "What is the correct ticker format for BSE stocks?",
+          "answer": "Use the scrip code or symbol followed by .BO suffix. Example: 500325.BO (Reliance), RELIANCE.BO. The suffix tells yfinance to query the Bombay Stock Exchange.",
+          "tags": ["ticker-format", "BSE", "suffix"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-006",
+          "question": "Why does yfinance return an empty DataFrame?",
+          "answer": "This usually means the ticker symbol is invalid or delisted. Verify the ticker exists on finance.yahoo.com. Some BSE scrip codes may not be recognized by yfinance.",
+          "tags": ["yfinance", "empty", "delisted", "invalid"],
+          "related_metric": "failed_ticker_rate"
+        },
+        {
+          "id": "faq-007",
+          "question": "How long does a batch fetch take?",
+          "answer": "Fetching is currently sequential (one ticker at a time). Each ticker takes 2-5 seconds. A batch of 50 tickers takes approximately 2-4 minutes. Concurrent fetching is planned for a future release.",
+          "tags": ["performance", "batch", "sequential", "timeout"],
+          "related_metric": "fetch_ticker_duration_ms"
+        },
+        {
+          "id": "faq-008",
+          "question": "How do I detect a yfinance API outage?",
+          "answer": "If multiple unrelated tickers all return 'failed' status within the same request, it likely indicates a yfinance/Yahoo Finance API outage. Check the ticker_health table for patterns — if failure_rate exceeds 80% across all tickers, the data source is likely down.",
+          "tags": ["outage", "yfinance", "detection", "health"],
+          "related_metric": "failed_ticker_rate"
+        }
+      ]
+    },
+    {
+      "id": "scoring-indicators",
+      "name": "Scoring & Indicators",
+      "entries": [
+        {
+          "id": "faq-009",
+          "question": "Why is my ticker's bullish score 0?",
+          "answer": "A score of 0 means all five indicators show bearish signals: RSI > 70 (overbought), MACD below signal line, price above upper Bollinger Band, price below SMA-50 without golden cross, and 5-day volume more than 20% below 20-day average.",
+          "tags": ["score", "zero", "bearish", "indicators"],
+          "related_metric": "scoring_duration_ms"
+        },
+        {
+          "id": "faq-010",
+          "question": "What does 'Low' confidence mean?",
+          "answer": "Confidence is derived directly from the bullish score: 75-100 = High, 50-74 = Medium, 0-49 = Low. A 'Low' confidence means the composite score is below 50, indicating weak bullish signals across the five indicators.",
+          "tags": ["confidence", "low", "score-range"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-011",
+          "question": "How does the Golden Cross scoring work?",
+          "answer": "When SMA-50 > SMA-200, the Moving Average sub-score is 20 (maximum). This is the classic Golden Cross pattern indicating a long-term bullish trend. If only the price is above SMA-50 (without golden cross), the score is 10.",
+          "tags": ["golden-cross", "SMA", "moving-average", "trend"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-012",
+          "question": "What does RSI oversold signal mean?",
+          "answer": "RSI below 30 indicates the stock is oversold — it has declined rapidly and may be due for a reversal. This gets the maximum RSI sub-score of 20 because oversold conditions often precede bullish reversals.",
+          "tags": ["RSI", "oversold", "reversal", "momentum"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-013",
+          "question": "How is MACD divergence interpreted?",
+          "answer": "Full bullish MACD alignment (score 20) requires: MACD line above signal line AND histogram positive AND histogram increasing. Partial bullish (score 12): MACD above signal only. Bearish (score 0): MACD below signal.",
+          "tags": ["MACD", "divergence", "histogram", "signal-line"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-014",
+          "question": "What is a Bollinger Band squeeze?",
+          "answer": "When price is near or below the lower Bollinger Band, it suggests the stock is at the lower end of its recent volatility range — potentially oversold. Score: below lower band = 20, between lower and middle = 12, between middle and upper = 6, above upper = 0.",
+          "tags": ["bollinger", "squeeze", "volatility", "oversold"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-015",
+          "question": "How is volume trend scored?",
+          "answer": "Compares 5-day average volume to 20-day average. If 5-day > 120% of 20-day (volume surge), score = 20. Within 80-120% (normal), score = 10. Below 80% (declining volume), score = 0. Rising volume confirms price trends.",
+          "tags": ["volume", "trend", "surge", "confirmation"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-016",
+          "question": "How is the 30-day projected price range calculated?",
+          "answer": "Uses annualized volatility from the last 30 days of log returns: lower = close × (1 - vol × √(30/252)), upper = close × (1 + vol × √(30/252)). This gives a statistically-derived price corridor for the next 30 trading days.",
+          "tags": ["projected-range", "volatility", "forecast", "formula"],
+          "related_metric": null
+        }
+      ]
+    },
+    {
+      "id": "infrastructure-config",
+      "name": "Infrastructure/Config",
+      "entries": [
+        {
+          "id": "faq-017",
+          "question": "How do I fix CORS errors in the browser?",
+          "answer": "Ensure the FRONTEND_ORIGIN environment variable matches your frontend URL (default: http://localhost:5173). The backend must be running on port 8000. If using a different port, update FRONTEND_ORIGIN accordingly.",
+          "tags": ["CORS", "frontend", "configuration", "browser"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-018",
+          "question": "Why isn't my .env file being loaded?",
+          "answer": "The backend uses os.environ directly. Ensure .env is at the project root and you're using python-dotenv or exporting variables manually. Vite reads .env automatically for VITE_* prefixed variables.",
+          "tags": ["env", "configuration", "dotenv", "environment"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-019",
+          "question": "Why won't uvicorn start?",
+          "answer": "Common causes: 1) Port 8000 already in use (kill the process or use --port 8001). 2) Missing dependencies (run pip install -r requirements.txt). 3) Import errors (check src/__init__.py files exist). 4) Virtual environment not activated.",
+          "tags": ["uvicorn", "startup", "port", "dependencies"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-020",
+          "question": "Why isn't the Vite proxy forwarding API requests?",
+          "answer": "Check vite.config.js has server.proxy configured: '/api' should proxy to 'http://localhost:8000'. Ensure the backend is running before starting the frontend. The proxy only works in dev mode (npm run dev), not in production builds.",
+          "tags": ["vite", "proxy", "frontend", "configuration"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-021",
+          "question": "Why is the cache empty after server restart?",
+          "answer": "The session cache is in-memory only (a Python dict). It clears on every server restart. This is by design for MVP1. Run a new analysis after restart to repopulate. Persistent caching is planned for MVP2.",
+          "tags": ["cache", "restart", "in-memory", "session"],
+          "related_metric": "cache_hits"
+        },
+        {
+          "id": "faq-022",
+          "question": "How do I fix SQLite 'database is locked' errors?",
+          "answer": "This occurs when multiple processes try to write to observability.db simultaneously. Ensure only one uvicorn instance is running. If the issue persists, delete data/observability.db and restart — it will be recreated automatically.",
+          "tags": ["sqlite", "locked", "database", "concurrency"],
+          "related_metric": "total_errors"
+        },
+        {
+          "id": "faq-023",
+          "question": "Ports 8000 or 5173 are already in use — what do I do?",
+          "answer": "On Windows: netstat -ano | findstr :8000 to find the PID, then taskkill /PID <pid> /F. On Linux/Mac: lsof -i :8000 then kill <pid>. Alternatively, use --port flag: uvicorn src.api.main:app --port 8001.",
+          "tags": ["port", "conflict", "process", "kill"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-024",
+          "question": "How do I activate the virtual environment on Windows?",
+          "answer": "Run: .venv\\Scripts\\activate (Command Prompt) or .venv\\Scripts\\Activate.ps1 (PowerShell). If you get a script execution policy error in PowerShell, run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser.",
+          "tags": ["venv", "windows", "activation", "powershell"],
+          "related_metric": null
+        }
+      ]
+    },
+    {
+      "id": "metrics-explained",
+      "name": "Metrics Explained",
+      "entries": [
+        {
+          "id": "faq-025",
+          "question": "What is avg_latency_ms and what's normal?",
+          "answer": "Average time (in milliseconds) to process an HTTP request end-to-end. Normal: <2000ms for single-ticker analysis, <10000ms for 50-ticker batch. Warning threshold: >5000ms per request. If consistently high, check network connectivity to yfinance.",
+          "tags": ["latency", "performance", "threshold", "normal"],
+          "related_metric": "avg_latency_ms"
+        },
+        {
+          "id": "faq-026",
+          "question": "What is cache_hit_ratio and what's healthy?",
+          "answer": "Percentage of GET /ticker requests served from cache vs. total requests. Healthy: >60% (users are viewing detail for already-analysed tickers). Degraded: <30% (may indicate cache being cleared too often or no repeat views). Calculated as: cache_hits / (cache_hits + cache_misses) × 100.",
+          "tags": ["cache", "ratio", "performance", "healthy"],
+          "related_metric": "cache_hits"
+        },
+        {
+          "id": "faq-027",
+          "question": "What is failed_ticker_rate and when is it abnormal?",
+          "answer": "Percentage of ticker fetch attempts that failed or returned insufficient data. Normal: <10% (occasional network blips or invalid tickers). Abnormal: >20% (possible yfinance outage, rate limiting, or systematic ticker format issues). Check ticker_health table for patterns.",
+          "tags": ["failure-rate", "threshold", "abnormal", "diagnosis"],
+          "related_metric": "failed_ticker_rate"
+        },
+        {
+          "id": "faq-028",
+          "question": "What does request_count tell me?",
+          "answer": "Total number of HTTP requests processed by the backend since last restart. Useful for understanding load patterns. A sudden spike may indicate automated tooling or repeated retries from the frontend.",
+          "tags": ["request-count", "load", "traffic", "monitoring"],
+          "related_metric": "total_requests"
+        },
+        {
+          "id": "faq-029",
+          "question": "What does ticker_health failure_rate mean per ticker?",
+          "answer": "Percentage of fetch attempts for a specific ticker that failed. If one ticker consistently fails (>50% failure rate), it likely has an incorrect format, is delisted, or has been suspended. Consider removing it from your ticker list.",
+          "tags": ["ticker-health", "per-ticker", "failure", "diagnosis"],
+          "related_metric": "failed_ticker_rate"
+        },
+        {
+          "id": "faq-030",
+          "question": "What is scoring_duration_ms and what's normal?",
+          "answer": "Time to compute all 5 indicator sub-scores and derive the bullish score for a single ticker. Normal: <100ms. Slow: >500ms (should not happen unless the system is under extreme memory pressure). This is pure computation — no network calls.",
+          "tags": ["scoring", "duration", "performance", "computation"],
+          "related_metric": "scoring_duration_ms"
+        },
+        {
+          "id": "faq-031",
+          "question": "What is fetch_ticker_duration_ms and what's normal?",
+          "answer": "Time for a single yfinance API call to download 1 year of OHLCV data. Normal: 2000-5000ms (2-5 seconds). Slow: >10000ms (network issues or yfinance congestion). Timeout: 30000ms (request will be aborted).",
+          "tags": ["fetch", "duration", "yfinance", "network"],
+          "related_metric": "fetch_ticker_duration_ms"
+        },
+        {
+          "id": "faq-032",
+          "question": "What is the difference between total_errors and total_warnings?",
+          "answer": "Errors (level=ERROR) are recorded for 5xx server responses and unhandled exceptions — these indicate bugs or infrastructure failures. Warnings (level=WARNING) are recorded for 4xx client errors (validation failures, 404s) — these are expected in normal usage and indicate user input issues.",
+          "tags": ["errors", "warnings", "severity", "distinction"],
+          "related_metric": "total_errors"
+        }
+      ]
+    },
+    {
+      "id": "indicator-guide",
+      "name": "Indicator Guide (Column Legends)",
+      "entries": [
+        {
+          "id": "faq-033",
+          "question": "What is RSI (Relative Strength Index)?",
+          "answer": "RSI is a momentum oscillator (0-100) that measures the speed and magnitude of recent price changes. It uses a 14-day lookback period. RSI < 30 indicates oversold conditions (bullish reversal likely, max score 20). RSI 30-50 is moderately bullish (15pts). RSI 50-70 is neutral (10pts). RSI > 70 indicates overbought (bearish, 0pts).",
+          "tags": ["RSI", "momentum", "oscillator", "oversold", "overbought", "column-legend"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-034",
+          "question": "What is MACD (Moving Average Convergence Divergence)?",
+          "answer": "MACD is a trend-following momentum indicator calculated from the difference between 12-day EMA and 26-day EMA. The signal line is a 9-day EMA of MACD. Full bullish alignment: MACD above signal + rising histogram = 20pts. Above signal only = 12pts. Below signal = 0pts. MACD helps identify trend direction and potential reversals.",
+          "tags": ["MACD", "trend", "EMA", "histogram", "signal-line", "column-legend"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-035",
+          "question": "What are Bollinger Bands (BB)?",
+          "answer": "Bollinger Bands consist of a 20-day SMA (middle band) with upper and lower bands at 2 standard deviations. They measure price volatility. Score: Price below lower band (oversold, 20pts) → lower-to-middle (12pts) → middle-to-upper (6pts) → above upper band (overbought, 0pts). Prices at the lower band suggest potential buying opportunities.",
+          "tags": ["bollinger", "bands", "volatility", "standard-deviation", "SMA", "column-legend"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-036",
+          "question": "What are Moving Averages (MA) — SMA50/SMA200?",
+          "answer": "The MA column compares two Simple Moving Averages: SMA-50 (50-day) and SMA-200 (200-day). A Golden Cross (SMA50 > SMA200) is the strongest bullish signal = 20pts. Price above SMA50 (but no golden cross) = 10pts. Price below SMA50 = 0pts. Moving averages smooth price data to identify trend direction over time.",
+          "tags": ["moving-average", "SMA", "golden-cross", "trend", "SMA50", "SMA200", "column-legend"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-037",
+          "question": "What is Volume Trend (Vol)?",
+          "answer": "Volume Trend compares the 5-day average trading volume to the 20-day average. Rising volume confirms price trends. Score: 5-day avg > 120% of 20-day (volume surge, 20pts) → within 80-120% (normal, 10pts) → below 80% (declining interest, 0pts). High volume with rising prices strongly confirms bullish momentum.",
+          "tags": ["volume", "trend", "confirmation", "surge", "liquidity", "column-legend"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-038",
+          "question": "How is the Bullish Score (0-100) calculated?",
+          "answer": "The Bullish Score is the sum of 5 equal-weight sub-scores (each 0-20, totaling 0-100): RSI + MACD + Bollinger Bands + Moving Averages + Volume Trend. Each indicator contributes equally. A score of 100 means all 5 indicators show maximum bullish alignment. The score determines Confidence: 75-100 = High, 50-74 = Medium, 0-49 = Low.",
+          "tags": ["bullish-score", "composite", "calculation", "confidence", "equal-weight", "column-legend"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-039",
+          "question": "What does Confidence (High/Medium/Low) mean?",
+          "answer": "Confidence is directly derived from the Bullish Score: High (75-100) means 4+ indicators are bullish — strong buy signal. Medium (50-74) means mixed signals with slight bullish lean. Low (0-49) means most indicators are bearish or neutral — weak bullish case. Higher confidence correlates with stronger historical probability of upward price movement.",
+          "tags": ["confidence", "high", "medium", "low", "interpretation", "column-legend"],
+          "related_metric": null
+        },
+        {
+          "id": "faq-040",
+          "question": "What does the 30-Day Projected Range mean?",
+          "answer": "The projected price range uses annualized volatility (from 30-day log returns) to estimate where the stock price might be in 30 trading days. Formula: Lower = Price × (1 - Vol × √(30/252)), Upper = Price × (1 + Vol × √(30/252)). This is a statistical estimate (approximately 1 standard deviation), not a guarantee. Wider ranges indicate higher volatility.",
+          "tags": ["projected-range", "volatility", "forecast", "30-day", "price-target", "column-legend"],
+          "related_metric": null
+        }
+      ]
+    }
+  ]
+}

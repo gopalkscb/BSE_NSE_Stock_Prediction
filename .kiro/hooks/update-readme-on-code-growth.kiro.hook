@@ -1,16 +1,19 @@
 {
-  "enabled": true,
   "name": "Update README on Large Code Changes",
-  "description": "Triggers an agent to update the README.md whenever a Python file is saved that contains 200 or more lines of code, keeping documentation in sync with the evolving codebase.",
-  "version": "1",
+  "version": "1.0.0",
+  "description": "Triggers an agent to update the README.md whenever a Python or JSX/JS file is saved that contains 50 or more lines of code, keeping documentation in sync with the evolving codebase.",
   "when": {
     "type": "fileEdited",
     "patterns": [
-      "**/*.py"
+      "**/*.py",
+      "**/*.jsx",
+      "**/*.js",
+      "**/*.ts",
+      "**/*.tsx"
     ]
   },
   "then": {
     "type": "askAgent",
-    "prompt": "A Python file was just saved. Check if the file that was edited has 200 or more lines of code. If it does, review the README.md at the project root and update it as needed to reflect any new features, modules, setup steps, usage instructions, or architectural changes introduced by the recent code. Keep the README accurate, clear, and helpful for new users and contributors. Preserve the existing structure and tone of the README while incorporating relevant updates."
+    "prompt": "A code file was just saved. Check if the file that was edited has 50 or more lines of code. If it does, review the README.md at the project root and update it as needed to reflect any new features, modules, setup steps, usage instructions, or architectural changes introduced by the recent code. Keep the README accurate, clear, and helpful for new users and contributors. Preserve the existing structure and tone of the README while incorporating relevant updates."
   }
 }

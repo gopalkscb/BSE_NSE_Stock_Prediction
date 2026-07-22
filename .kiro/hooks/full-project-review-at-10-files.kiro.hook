@@ -1,8 +1,7 @@
 {
-  "enabled": true,
   "name": "Full Project Review at 10 Files",
+  "version": "1.0.0",
   "description": "When any new code file is created, counts all code files in the project. At every 10-file milestone, performs a full project-wide review covering syntax, bugs, security, and vulnerabilities across all files regardless of language.",
-  "version": "1",
   "when": {
     "type": "fileCreated",
     "patterns": [
@@ -28,7 +27,6 @@
       "**/*.sh",
       "**/*.yaml",
       "**/*.yml",
-      "**/*.json",
       "**/*.html",
       "**/*.css",
       "**/*.scss"
