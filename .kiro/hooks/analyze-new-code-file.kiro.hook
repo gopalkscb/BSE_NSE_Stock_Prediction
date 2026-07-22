@@ -1,0 +1,41 @@
+{
+  "enabled": true,
+  "name": "Analyze New Code File",
+  "description": "Analyzes every new code file created (any language) for syntax errors, bugs, security vulnerabilities, and code quality issues, then reports findings to the user.",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "**/*.py",
+      "**/*.js",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.jsx",
+      "**/*.java",
+      "**/*.cs",
+      "**/*.cpp",
+      "**/*.c",
+      "**/*.h",
+      "**/*.go",
+      "**/*.rs",
+      "**/*.rb",
+      "**/*.php",
+      "**/*.swift",
+      "**/*.kt",
+      "**/*.scala",
+      "**/*.r",
+      "**/*.sql",
+      "**/*.sh",
+      "**/*.yaml",
+      "**/*.yml",
+      "**/*.json",
+      "**/*.html",
+      "**/*.css",
+      "**/*.scss"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new code file was just created. Read the file, detect the programming language, and perform a thorough analysis covering all of the following areas:\n\n1. **Syntax Check**: Identify any syntax errors or invalid constructs for the detected language.\n2. **Bug Detection**: Look for logical errors, off-by-one errors, incorrect variable usage, unhandled exceptions/errors, null/undefined dereferences, or incorrect control flow.\n3. **Security Vulnerabilities**: Check for issues like injection attacks (SQL, command, XSS), hardcoded secrets or API keys, use of insecure or deprecated functions, unsafe deserialization, path traversal risks, insecure HTTP usage, broken authentication patterns, and exposed sensitive data.\n4. **Code Quality**: Flag unused imports/variables, undefined references, shadowed names, poor error handling, memory leaks, and anti-patterns specific to the language.\n5. **Vulnerability Summary**: Provide a prioritized list of findings with severity (Critical / High / Medium / Low), file name, line number, and a recommended fix for each issue.\n\nPresent findings in a clear structured report grouped by category. If no issues are found, confirm the file looks clean."
+  }
+}

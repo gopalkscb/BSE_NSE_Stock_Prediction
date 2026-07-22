@@ -1,0 +1,41 @@
+{
+  "enabled": true,
+  "name": "Full Project Review at 10 Files",
+  "description": "When any new code file is created, counts all code files in the project. At every 10-file milestone, performs a full project-wide review covering syntax, bugs, security, and vulnerabilities across all files regardless of language.",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "**/*.py",
+      "**/*.js",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.jsx",
+      "**/*.java",
+      "**/*.cs",
+      "**/*.cpp",
+      "**/*.c",
+      "**/*.h",
+      "**/*.go",
+      "**/*.rs",
+      "**/*.rb",
+      "**/*.php",
+      "**/*.swift",
+      "**/*.kt",
+      "**/*.scala",
+      "**/*.r",
+      "**/*.sql",
+      "**/*.sh",
+      "**/*.yaml",
+      "**/*.yml",
+      "**/*.json",
+      "**/*.html",
+      "**/*.css",
+      "**/*.scss"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new code file was just created. Count the total number of code files currently in the project workspace across ALL languages (Python, JavaScript, TypeScript, Java, C/C++, Go, Rust, Ruby, PHP, Swift, Kotlin, Scala, R, SQL, shell scripts, HTML, CSS, YAML, JSON, etc.). Exclude dependency folders like node_modules/, .venv/, venv/, vendor/, __pycache__, .git/, and build/dist output directories.\n\nIf the total count has reached a multiple of 10 (i.e. 10, 20, 30...), perform a comprehensive full-project code review across ALL code files. The review must cover:\n\n1. **Syntax Analysis**: Any syntax errors or invalid constructs across all files, noting the language for each.\n2. **Bug Report**: Logical bugs, unhandled exceptions/errors, null/undefined dereferences, incorrect data handling, race conditions, or faulty control flow found anywhere in the codebase.\n3. **Security Audit**: Hardcoded credentials or API keys, injection vulnerabilities (SQL, XSS, command injection), insecure library/function usage, improper input validation, broken authentication, exposed sensitive data, insecure HTTP, and OWASP Top 10 risks relevant to the languages in use.\n4. **Cross-file Issues**: Circular dependencies, inconsistent interfaces between modules, missing error propagation, broken import/require paths, and mismatched data contracts.\n5. **Vulnerability Summary**: A full prioritized list of all findings across the codebase with file name, line number, language, severity (Critical / High / Medium / Low), description, and recommended fix.\n\nPresent a structured report with an executive summary at the top, followed by per-file findings grouped by severity. If the file count is not yet a multiple of 10, skip the full review and take no action."
+  }
+}
