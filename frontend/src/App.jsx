@@ -3,12 +3,20 @@ import '@cloudscape-design/global-styles/index.css';
 import './theme.css';
 import { AppLayout, Tabs, Box } from '@cloudscape-design/components';
 import AnalysisPage from './pages/AnalysisPage';
+import LiveDataPage from './pages/LiveDataPage';
 import ObservabilityPage from './pages/ObservabilityPage';
 import FaqPanel from './components/FaqPanel';
+import RAGDashboardTab from './components/RAGDashboardTab';
+import AskAIPanel from './components/AskAIPanel';
 
 /**
  * App - Root component with branded header and top-level tabs.
- * Disables Observability and FAQ tabs while analysis is in progress.
+ * Tabs:
+ *   1. Analysis — yfinance bulk scoring (5 indicators, ranked table)
+ *   2. Live Data — single ticker live lookup with indicator details
+ *   3. RAG Reference — AI Q&A + evaluation dashboard
+ *   4. Observability — metrics + error log
+ *   5. FAQ — help & guide
  */
 export default function App() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
@@ -21,7 +29,7 @@ export default function App() {
           {/* Branded Header */}
           <div className="app-header">
             <h1>📈 Bullish Stock Predictor</h1>
-            <p>BSE &amp; NSE Technical Analysis — Top 100 yfinance-validated tickers</p>
+            <p>BSE &amp; NSE Technical Analysis — yfinance Scoring · Live Data · RAG Intelligence</p>
           </div>
 
           {/* Main Tabs */}
@@ -38,6 +46,18 @@ export default function App() {
                 id: 'analysis',
                 label: '🔍 Analysis',
                 content: <AnalysisPage onLoadingChange={setAnalysisLoading} />,
+              },
+              {
+                id: 'live-data',
+                label: analysisLoading ? '⚡ Live Data (locked)' : '⚡ Live Data',
+                disabled: analysisLoading,
+                content: <LiveDataPage />,
+              },
+              {
+                id: 'rag-reference',
+                label: analysisLoading ? '📚 RAG Reference (locked)' : '📚 RAG Reference',
+                disabled: analysisLoading,
+                content: <RAGReferencePage />,
               },
               {
                 id: 'observability',
@@ -59,6 +79,31 @@ export default function App() {
       navigationHide
       toolsHide
       data-testid="app-layout"
+    />
+  );
+}
+
+/**
+ * RAGReferencePage — Sub-tabs for RAG-powered reference data:
+ *   - Ask AI: conversational Q&A grounded in financial news
+ *   - RAG Performance: evaluation metrics dashboard
+ */
+function RAGReferencePage() {
+  return (
+    <Tabs
+      tabs={[
+        {
+          id: 'ask-ai',
+          label: '🤖 Ask AI',
+          content: <AskAIPanel />,
+        },
+        {
+          id: 'rag-dashboard',
+          label: '📈 RAG Performance',
+          content: <RAGDashboardTab />,
+        },
+      ]}
+      data-testid="rag-tabs"
     />
   );
 }

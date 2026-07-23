@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Bullish Stock Predictor is a full-stack MVP application that accepts a user-supplied list of BSE/NSE stock tickers, fetches one year of historical OHLCV data via yfinance, computes a composite bullish score (0–100) from five standard technical indicators (RSI, MACD, Bollinger Bands, Moving Averages, Volume Trend), and surfaces the top 10 most bullish stocks for the next 30-day outlook. The backend is a FastAPI service; the frontend is a React application styled with the AWS Cloudscape Design System.
+The Bullish Stock Predictor is a full-stack MVP application that accepts a user-supplied list of BSE/NSE stock tickers, fetches one year of historical OHLCV data via yfinance, computes a composite bullish score (0–100) from five standard technical indicators (RSI, MACD, Bollinger Bands, Moving Averages, Volume Trend), and surfaces all scored stocks ranked by bullish potential for the next 30-day outlook. The backend is a FastAPI service; the frontend is a React application styled with the AWS Cloudscape Design System.
 
 ---
 
@@ -40,7 +40,7 @@ The Bullish Stock Predictor is a full-stack MVP application that accepts a user-
 3. IF the submitted ticker list is empty, THEN THE Frontend SHALL display an inline validation error message and SHALL NOT send a request to the API Server.
 4. WHEN a ticker list is received by the API Server, THE API Server SHALL validate that each Ticker string is non-empty and does not exceed 20 characters.
 5. IF any Ticker fails server-side validation, THEN THE API Server SHALL return HTTP 422 with a JSON body listing each invalid Ticker and the reason for rejection.
-6. THE Frontend SHALL accept a minimum of 1 Ticker and a maximum of 200 Tickers per submission.
+6. THE Frontend SHALL accept a minimum of 1 Ticker and a maximum of 500 Tickers per submission. [ACTUAL: Changed from 200 to 500 to match Pydantic model max_length=500]
 
 ---
 
@@ -97,8 +97,8 @@ The Bullish Stock Predictor is a full-stack MVP application that accepts a user-
 
 #### Acceptance Criteria
 
-1. THE API Server SHALL sort all successfully scored Tickers by Bullish Score in descending order and return the top 10 as the ranked result set.
-2. IF fewer than 10 Tickers are successfully scored, THEN THE API Server SHALL return all successfully scored Tickers ranked by Bullish Score.
+1. THE API Server SHALL sort all successfully scored Tickers by Bullish Score in descending order and return ALL of them as the ranked result set. [ACTUAL: Changed from 'top 10' to 'ALL' — frontend handles pagination at 10 per page]
+2. IF fewer than 10 Tickers are successfully scored, THEN THE API Server SHALL return all successfully scored Tickers ranked by Bullish Score. [ACTUAL: Moot — API always returns ALL scored tickers regardless of count; frontend paginates at 10]
 3. THE API Server SHALL include the following fields for each ranked Ticker in the response: ticker symbol, Bullish Score, Confidence Level, RSI value, MACD signal (bullish/neutral/bearish), Bollinger Band signal (oversold/neutral/overbought), Moving Average signal (golden cross/above MA/below MA), Volume Trend signal (high/normal/low), Projected Price Range lower bound, and Projected Price Range upper bound.
 4. THE API Server SHALL respond to a valid analysis request within 90 seconds for a batch of up to 50 Tickers.
 5. THE API Server SHALL expose the analysis endpoint at `POST /api/v1/analyze` accepting a JSON body with a `tickers` array of strings.
@@ -112,7 +112,7 @@ The Bullish Stock Predictor is a full-stack MVP application that accepts a user-
 
 #### Acceptance Criteria
 
-1. THE Frontend SHALL render the ranked results in a Cloudscape Table component with the following columns: Rank, Ticker, Bullish Score, Confidence Level, RSI Signal, MACD Signal, BB Signal, MA Signal, Volume Signal, 30-Day Price Range.
+1. THE Frontend SHALL render the ranked results in a Cloudscape Table component with the following columns: Rank, Ticker, Bullish Score, Confidence Level, RSI Signal, MACD Signal, BB Signal, MA Signal, Volume Signal, 30-Day Price Range. The table SHALL paginate results at 10 rows per page. [ACTUAL: API returns ALL results; frontend paginates at 10 per page]
 2. THE Frontend SHALL display the Confidence Level using a Cloudscape Badge component with distinct colours: green for "High", orange for "Medium", and grey for "Low".
 3. WHEN the analysis is in progress, THE Frontend SHALL display a Cloudscape Spinner component and disable the submit button.
 4. WHEN the API Server returns an error response, THE Frontend SHALL display the error details in a Cloudscape Alert component of type "error".
@@ -160,10 +160,10 @@ The Bullish Stock Predictor is a full-stack MVP application that accepts a user-
 #### Acceptance Criteria
 
 1. THE API Server SHALL expose a `GET /health` endpoint that returns HTTP 200 with JSON body `{"status": "ok", "uptime_seconds": N}` where N is seconds since server start. This endpoint SHALL require no authentication.
-2. THE API Server SHALL log every HTTP request using `structlog` in JSON format with fields: `timestamp` (ISO 8601), `request_id` (UUID v4 generated per request by middleware), `method`, `path`, `status_code`, `duration_ms`, `client_ip`.
-3. THE API Server SHALL inject the `request_id` into all child log calls within the same request lifecycle using `structlog.contextvars`.
-4. THE log level SHALL be controlled by the `LOG_LEVEL` environment variable with a default of `INFO`. Valid values: `DEBUG`, `INFO`, `WARNING`, `ERROR`.
-5. THE API Server SHALL write logs to stdout in JSON format (no file output in MVP1).
+2. ~~THE API Server SHALL log every HTTP request using `structlog` in JSON format with fields: `timestamp` (ISO 8601), `request_id` (UUID v4 generated per request by middleware), `method`, `path`, `status_code`, `duration_ms`, `client_ip`.~~ [DEFERRED: Actual implementation uses standard Python `logging` module, not structlog. No request_id UUID is generated. structlog is listed in requirements.txt but never imported.]
+3. ~~THE API Server SHALL inject the `request_id` into all child log calls within the same request lifecycle using `structlog.contextvars`.~~ [DEFERRED: Not implemented — uses standard logging without request_id context propagation.]
+4. ~~THE log level SHALL be controlled by the `LOG_LEVEL` environment variable with a default of `INFO`. Valid values: `DEBUG`, `INFO`, `WARNING`, `ERROR`.~~ [DEFERRED: Standard logging is used but LOG_LEVEL env var configuration is not wired.]
+5. ~~THE API Server SHALL write logs to stdout in JSON format (no file output in MVP1).~~ [DEFERRED: Logs go to stdout but in plain text format, not JSON.]
 6. THE API Server SHALL NOT log sensitive values (API keys, raw OHLCV data arrays, full ticker lists exceeding 10 items) in any log line.
 
 
@@ -181,15 +181,52 @@ The Bullish Stock Predictor is a full-stack MVP application that accepts a user-
 4. THE API Server SHALL expose `GET /api/v1/observability/ticker-health` returning per-ticker health records (total_requests, total_failures, failure_rate, last_failure_reason, last_success_at, last_failure_at, avg_confidence_score, low_confidence_count) sorted by failure rate descending.
 5. THE API Server SHALL expose `GET /api/v1/observability/faq` serving the contents of `docs/faq.json`.
 6. THE API Server SHALL automatically record request metrics (count, duration, status code) via middleware on every HTTP request.
-7. THE API Server SHALL record timing metrics for: per-ticker fetch duration, total indicator computation, individual indicator computations (RSI, MACD, Bollinger, SMA, EMA, Volume), scoring duration, cache hits, and cache misses.
-8. THE API Server SHALL record per-ticker health updates on every fetch attempt (success/failure) and on every scoring result (confidence level tracking).
+7. THE API Server SHALL record timing metrics for: per-ticker fetch duration, total indicator computation, individual indicator computations (RSI, MACD, Bollinger, SMA, EMA, Volume), scoring duration, cache hits, and cache misses. [ACTUAL: `@timed` decorator and `TimingContext` are defined in `src/observability/timing.py` but are NOT yet applied to any functions — defined but unwired. Cache hit/miss instrumentation is also not implemented.]
+8. THE API Server SHALL record per-ticker health updates on every fetch attempt (success/failure) and on every scoring result (confidence level tracking). [ACTUAL: `update_ticker_health()` function exists in `src/observability/store.py` but is NOT yet called from any route — defined but unwired.]
 9. THE API Server SHALL record errors/warnings in the error_log table when: fetch failures occur, 4xx responses are returned (WARNING), 5xx responses are returned (ERROR).
-10. THE Frontend SHALL render an "Observability" tab accessible from the main navigation, containing three sub-panels: "Live Metrics", "Error Log", and "FAQ / Debug Guide".
-11. THE Frontend "Live Metrics" panel SHALL display 5 metric counter cards (Total Requests, Avg Latency, Cache Hit Ratio, Failed Ticker Rate, Active Errors) and a ticker health table with color-coded status indicators (green <10% failure, amber 10-20%, red >20%).
+10. THE Frontend SHALL render an "Observability" tab accessible from the main navigation, containing two sub-tabs: "Live Metrics" and "Error Log". The FAQ/Debug Guide is rendered as a separate top-level "FAQ" tab. [ACTUAL: Changed from 'three sub-panels' — FAQ was moved to its own top-level tab; ObservabilityPage has 2 sub-tabs]
+11. THE Frontend "Live Metrics" panel SHALL display 4 metric counter cards (Total Requests, Avg Latency, Cache Hits, Total Errors) and a ticker health table with color-coded status indicators (green <10% failure, amber 10-20%, red >20%). [ACTUAL: Changed from 5 cards to 4 — Cache Hit Ratio split removed; Failed Ticker Rate and Active Errors replaced with Cache Hits and Total Errors]
 12. THE Frontend "Error Log" panel SHALL display a paginated table of errors/warnings with columns: Timestamp, Level (color-coded badge), Source Module, Message. It SHALL support level filtering and expandable row details.
-13. THE Frontend "FAQ / Debug Guide" panel SHALL render a searchable accordion with 4 categories: "Data Fetch Errors", "Scoring & Indicators", "Infrastructure/Config", "Metrics Explained". Each entry SHALL have: question, answer, tags (as badges), and related_metric reference.
+13. THE Frontend "FAQ / Debug Guide" panel SHALL render a searchable accordion with 5 categories: "Data Fetch Errors", "Scoring & Indicators", "Infrastructure/Config", "Metrics Explained", and one additional category. Each entry SHALL have: question, answer, tags (as badges), and related_metric reference. [ACTUAL: Changed from 4 categories to 5 to match actual docs/faq.json]
 14. THE Frontend observability panels SHALL auto-poll every 30 seconds AND provide a manual "Refresh Now" button.
-15. THE static FAQ file (`docs/faq.json`) SHALL contain 28-40 entries across 4 categories, including both error resolutions and metric explanations with normal/abnormal thresholds.
+15. THE static FAQ file (`docs/faq.json`) SHALL contain 28-40 entries across 5 categories, including both error resolutions and metric explanations with normal/abnormal thresholds. [ACTUAL: Changed from 4 categories to 5 to match actual implementation]
 16. `data/observability.db` SHALL be added to `.gitignore`.
 17. `aiosqlite==0.20.0` SHALL be added to `requirements.txt`.
 
+
+
+---
+
+## Implementation Notes
+
+_Added 2026-07-23 after code audit. Documents actual implementation state vs. original spec._
+
+### Extra Features (not in original spec)
+
+| Feature | Location | Notes |
+|---|---|---|
+| BSE ticker auto-resolution (`resolve_bse_ticker`) | `src/data/fetch_market_data.py` | Attempts to resolve BSE tickers by trying `.BO` suffix variants |
+| BSE→NSE fallback in fetch | `src/data/fetch_market_data.py` | If primary fetch fails, tries alternate exchange suffix |
+| Ticker presets (NIFTY_50, SENSEX_30, etc.) | `frontend/src/data/tickerPresets.js` | One-click preset lists for common indices |
+| Custom theme styling | `frontend/src/theme.css` | Visual polish beyond base Cloudscape |
+| User-friendly error messages with hints | `src/api/routes/analyze.py` | Error responses include actionable suggestions |
+
+### Technical Deviations
+
+| Area | Spec | Actual | Impact |
+|---|---|---|---|
+| App version | Not specified | 4.0.0 (carries MVP4 code forward in package structure) | Low — version number cosmetic |
+| Data models | Dataclasses (per design doc) | Pydantic v2 `BaseModel` throughout | Low — more validation power, same shape |
+| Batch fetching | ThreadPoolExecutor (concurrent) | Sequential `fetch_batch()` | Medium — slower for large batches; ThreadPoolExecutor deferred to MVP1b |
+| Cache implementation | In-memory with unspecified limits | In-memory dict, no TTL, no size limit | Low — acceptable for MVP; limits deferred |
+| Structured logging | structlog JSON format | Standard Python `logging` module | Medium — structured logging deferred (see Req 9.2–9.5) |
+| RAG router | Not in MVP1 scope | `main.py` registers RAG router via `try/except ImportError` (non-critical, fails silently) | None — no-op when RAG module absent |
+
+### Unwired Components (defined but not connected)
+
+| Component | File | Status |
+|---|---|---|
+| `@timed` decorator | `src/observability/timing.py` | ✅ Defined, ❌ Never applied to any function |
+| `TimingContext` | `src/observability/timing.py` | ✅ Defined, ❌ Never used |
+| `update_ticker_health()` | `src/observability/store.py` | ✅ Defined, ❌ Never called from routes |
+| Cache hit/miss metrics | — | ❌ Not implemented |

@@ -1,0 +1,61 @@
+# RAG Pipeline Configuration
+# MVP4 - Live Data Streaming + RAG-Powered Intelligence
+
+ingestion:
+  rss_feeds:
+    - https://www.moneycontrol.com/rss/marketreports.xml
+    - https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms
+    - https://www.livemint.com/rss/markets
+    - https://www.bseindia.com/markets/MarketInfo/RssFeeds.aspx
+  chunk_size: 512
+  chunk_overlap: 50
+  max_articles_per_feed: 20
+  schedule_hours: 6
+
+embedding:
+  model: text-embedding-3-small
+  dimensions: 1536
+  batch_size: 100
+
+retrieval:
+  top_k: 10
+  bm25_weight: 0.3
+  dense_weight: 0.7
+  namespace: news
+
+generation:
+  model: gpt-4o-mini
+  max_tokens: 500
+  temperature: 0.3
+  system_prompt: >-
+    You are an AI financial research assistant for Indian stock markets (BSE/NSE).
+    Answer questions using ONLY the provided context. Be concise and cite sources.
+    Never provide investment advice.
+
+evaluation:
+  eval_set_path: data/rag_eval_set.json
+  run_after_ingest: true
+  degradation_threshold: 0.10
+  metrics:
+    - precision_at_k
+    - recall_at_k
+    - mrr
+    - faithfulness
+    - answer_relevance
+    - context_relevance
+
+orchestration:
+  circuit_breaker:
+    failure_threshold: 3
+    cooldown_seconds: 900  # 15 minutes
+  scheduler:
+    enabled: true
+    interval_hours: 6
+
+pinecone:
+  index_name: bse-nse-research
+  namespace: news
+  dimension: 1536
+  metric: cosine
+  cloud: aws
+  region: us-east-1

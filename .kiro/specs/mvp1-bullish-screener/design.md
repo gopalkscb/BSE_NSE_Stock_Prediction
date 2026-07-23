@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Bullish Stock Predictor is a full-stack MVP that accepts a comma-separated list of BSE/NSE tickers, fetches one year of OHLCV history via **yfinance**, computes five technical-indicator sub-scores, ranks the top-10 most bullish stocks, and surfaces the results through a React + AWS Cloudscape frontend backed by a FastAPI service.
+The Bullish Stock Predictor is a full-stack MVP that accepts a comma-separated list of BSE/NSE tickers, fetches one year of OHLCV history via **yfinance**, computes five technical-indicator sub-scores, ranks all scored stocks (frontend paginates at 10/page), and surfaces the results through a React + AWS Cloudscape frontend backed by a FastAPI service.
 
 ---
 
@@ -104,9 +104,9 @@ frontend/
    └─ exception        →  mark "failed", skip, log error
 5. For each valid df   →  IndicatorCalculator.compute(df)  →  IndicatorSet
 6. For each IndicatorSet → BullishScorer.score(indicators)  →  ScoredTicker
-7. Sort desc by score  →  take top 10
+7. Sort desc by score  →  return all sorted
 8. Store in cache      →  session_cache[ticker] = ScoredTicker
-9. Return JSON         →  { "results": [...top10...], "failed": [...] }
+9. Return JSON         →  { "results": [...all sorted...], "failed": [...] }
 ```
 
 ### Detail Request (GET /api/v1/ticker/{ticker})
@@ -120,6 +120,8 @@ frontend/
 ---
 
 ## Key Data Models (Python dataclasses)
+
+> **Implementation Note:** All models below are implemented as **Pydantic v2 BaseModel** classes in `src/api/models.py`, not Python dataclasses. The dataclass notation here is used for brevity.
 
 ```python
 @dataclass
@@ -171,11 +173,11 @@ class ScoredTicker:
 
 @dataclass
 class AnalyzeRequest:
-    tickers: list[str]          # 1..200 items
+    tickers: list[str]          # 1..500 items
 
 @dataclass
 class AnalyzeResponse:
-    results: list[ScoredTicker] # top-10, sorted desc by bullish_score
+    results: list[ScoredTicker] # all scored, sorted desc by bullish_score
     failed: list[dict]          # [{"ticker": "X", "reason": "..."}]
 ```
 
@@ -208,9 +210,9 @@ router = APIRouter()
 @router.post("/api/v1/analyze", response_model=AnalyzeResponse)
 async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
     """
-    1. Validate tickers (non-empty, ≤ 20 chars, 1-200 items).
+    1. Validate tickers (non-empty, ≤ 20 chars, 1-500 items).
     2. Fetch OHLCV, compute indicators, score each ticker.
-    3. Sort top-10, store in cache, return results + failed list.
+    3. Sort all scored results, store in cache, return results + failed list.
     Raises HTTP 422 if all tickers fail validation or data fetch.
     """
     ...
@@ -263,7 +265,7 @@ def fetch_ticker(ticker: str, period: str = "1y") -> FetchResult:
 
 def fetch_batch(tickers: list[str]) -> list[FetchResult]:
     """
-    Fetch all tickers concurrently (ThreadPoolExecutor).
+    Fetch all tickers sequentially (ThreadPoolExecutor deferred to MVP1b).
     Returns one FetchResult per ticker regardless of individual failures.
     """
     ...
@@ -384,7 +386,7 @@ def score_ticker(indicators: IndicatorSet, ohlcv_90d: list[dict]) -> ScoredTicke
     ...
 
 def rank_tickers(scored: list[ScoredTicker]) -> list[ScoredTicker]:
-    """Sort descending by bullish_score; return top 10 (or fewer if < 10 available)."""
+    """Sort descending by bullish_score; return all sorted descending."""
     ...
 ```
 
@@ -484,7 +486,7 @@ def rank_tickers(scored: list[ScoredTicker]) -> list[ScoredTicker]:
 //   </Button>
 //
 // Validation: trims whitespace, removes duplicates, blocks empty submit,
-//             enforces 1–200 ticker limit, shows inline FormField error
+//             enforces 1–500 ticker limit, shows inline FormField error
 ```
 
 ### `StatCard.jsx`
@@ -1143,7 +1145,7 @@ pytest-asyncio==0.23.6
 
 ### Property 3: Batch size boundary is enforced
 
-*For any* list of 1–200 tickers, the frontend should allow submission. For any empty list or list with more than 200 items, the frontend should block submission and show a validation error.
+*For any* list of 1–500 tickers, the frontend should allow submission. For any empty list or list with more than 500 items, the frontend should block submission and show a validation error.
 
 **Validates: Requirements 1.6**
 
@@ -1222,10 +1224,10 @@ pytest-asyncio==0.23.6
 
 ---
 
-### Property 12: Top-10 ranking is sorted, bounded, and complete
+### Property 12: Ranking is sorted and complete
 
 *For any* non-empty list of `ScoredTicker` objects:
-- The ranked result contains at most 10 items
+- The ranked result contains all scored items
 - Items are in non-increasing order of `bullish_score`
 - Every item in the result is drawn from the original input (no fabrication)
 - Each item in the result contains all required API response fields: ticker, bullish_score, confidence, rsi_value, macd_signal_label, bb_signal_label, ma_signal_label, volume_signal_label, projected_lower, projected_upper
@@ -1569,26 +1571,33 @@ class FaqResponse(BaseModel):
 
 ### Frontend Component Hierarchy
 
+> **Implementation Note:** The actual implementation has 5 top-level tabs in App.jsx:
+> 1. **Analysis** → AnalysisPage.jsx
+> 2. **Observability** → ObservabilityPage.jsx (2 sub-tabs: Live Metrics, Error Log)
+> 3. **FAQ / Debug Guide** → FaqPanel.jsx (separate top-level tab, not nested inside Observability)
+> 4. **RAG Chat** (MVP4 placeholder)
+> 5. **Admin** (MVP2 placeholder)
+
 ```
 App.jsx
-├── AppHeader (TopNavigation with Analysis / Observability tabs)
+├── AppHeader (TopNavigation with Analysis / Observability / FAQ / RAG Chat / Admin tabs)
 ├── AnalysisPage.jsx (existing)
-└── ObservabilityPage.jsx (new)
-    └── Cloudscape Tabs
-        ├── Tab "Live Metrics" → MetricsPanel.jsx
-        │   ├── ColumnLayout (5 metric cards: Box + StatCard style)
-        │   ├── Table (ticker health with StatusIndicator)
-        │   ├── Button "Refresh Now"
-        │   └── Spinner + "Last updated" text
-        ├── Tab "Error Log" → ErrorLogPanel.jsx
-        │   ├── Select (level filter: All/ERROR/WARNING)
-        │   ├── Table (Timestamp, Level Badge, Source, Message)
-        │   ├── Expandable row details (pre block)
-        │   └── Pagination
-        └── Tab "FAQ / Debug Guide" → FaqPanel.jsx
-            ├── TextFilter (keyword search)
-            └── 4 × ExpandableSection (one per category)
-                └── List of Q&A items (question, answer, tags as Badge, related_metric)
+├── ObservabilityPage.jsx
+│   └── Cloudscape Tabs
+│       ├── Tab "Live Metrics" → MetricsPanel.jsx
+│       │   ├── ColumnLayout (5 metric cards: Box + StatCard style)
+│       │   ├── Table (ticker health with StatusIndicator)
+│       │   ├── Button "Refresh Now"
+│       │   └── Spinner + "Last updated" text
+│       └── Tab "Error Log" → ErrorLogPanel.jsx
+│           ├── Select (level filter: All/ERROR/WARNING)
+│           ├── Table (Timestamp, Level Badge, Source, Message)
+│           ├── Expandable row details (pre block)
+│           └── Pagination
+└── FaqPanel.jsx (top-level tab)
+    ├── TextFilter (keyword search)
+    └── 5 × ExpandableSection (one per category)
+        └── List of Q&A items (question, answer, tags as Badge, related_metric)
 ```
 
 ### FAQ JSON Structure
@@ -1630,6 +1639,8 @@ App.jsx
 
 ### Instrumentation Points
 
+> **⚠️ IMPLEMENTATION STATUS NOTE:** The `@timed` decorator and `TimingContext` are defined in `src/observability/timing.py` but are **NOT YET APPLIED** to any functions. Cache hit/miss metrics are not emitted. `update_ticker_health()` is defined but never called from routes. Only the middleware instrumentation (request_count, request_duration_ms, error logging) is active.
+
 | Module | Metric Recorded | Error Recorded | Ticker Health Updated |
 |---|---|---|---|
 | `middleware` | `request_count`, `request_duration_ms` | WARNING on 4xx, ERROR on 5xx | — |
@@ -1658,8 +1669,34 @@ App.jsx
 
 **Validates: Requirements 10.9**
 
-#### Property 17: FAQ response contains exactly 4 categories with non-empty entries
+#### Property 17: FAQ response contains exactly 5 categories with non-empty entries
 
-*For any* call to `GET /api/v1/observability/faq`, the response contains exactly 4 categories, each with at least 7 entries, and every entry has non-empty `id`, `question`, `answer`, and `tags` fields.
+*For any* call to `GET /api/v1/observability/faq`, the response contains exactly 5 categories, each with at least 5 entries, and every entry has non-empty `id`, `question`, `answer`, and `tags` fields.
 
 **Validates: Requirements 10.5, 10.15**
+
+
+---
+
+## Implementation Status
+
+*Last updated: 2026-07-23*
+
+| Area | Status | Notes |
+|---|---|---|
+| **Overall** | ~85% complete | Core functional; observability wiring incomplete |
+| Core pipeline (fetch → indicators → score → cache → API → frontend) | ✅ COMPLETE | End-to-end working |
+| Observability infrastructure (store, middleware, timing utilities, routes) | ✅ COMPLETE | All modules defined and route handlers functional |
+| Observability wiring (applying `@timed` decorators, calling `update_ticker_health()`, cache hit/miss metrics) | ❌ NOT DONE | Decorators defined but never applied; health update never called |
+| structlog | ❌ NOT CONFIGURED | Listed in `requirements.txt` but application uses standard `logging` module |
+| Frontend (AnalysisPage, TickerInputForm, StockDetailDrawer, ObservabilityPage, FaqPanel) | ✅ COMPLETE | All components rendered and functional |
+| Tests (8 smoke test files) | ✅ COMPLETE | All passing; MVP1b will expand to ~140 tests |
+
+### Known Deviations from Original Spec
+
+1. **Returns all scored tickers** (not top-10) — frontend paginates at 10/page
+2. **Ticker limit is 500** (not 200) — more permissive than originally specified
+3. **FAQ has 5 categories** (not 4) — additional category is a bonus
+4. **Sequential fetching** — ThreadPoolExecutor concurrency deferred to MVP1b
+5. **Models use Pydantic v2 BaseModel** — not Python dataclasses
+6. **ObservabilityPage has 2 tabs** (Metrics + Errors), FAQ is a separate top-level tab

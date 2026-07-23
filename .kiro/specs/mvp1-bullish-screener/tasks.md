@@ -14,9 +14,15 @@ Testing stack (basic):
 
 ---
 
+## Completion Status: ~85% (9/9 tasks done, minor wiring gaps remain)
+
+All 9 tasks have working implementation. Remaining gaps are observability wiring (decorator application, ticker health calls, cache metrics, structlog config) — tracked for completion before MVP1a gate.
+
+---
+
 ## Tasks
 
-- [ ] 1. Project scaffolding + Pydantic models
+- [x] 1. Project scaffolding + Pydantic models
   - Create package `__init__.py` files: `src/`, `src/api/`, `src/api/routes/`, `src/data/`, `src/features/`, `src/models/`, `tests/`
   - Create `src/api/models.py` with Pydantic v2 models: `AnalyzeRequest`, `AnalyzeResponse`, `ScoredTicker`, `SubScores`, `IndicatorSet`
   - Create `requirements.txt` with all pinned dependencies
@@ -26,16 +32,16 @@ Testing stack (basic):
   - ⏱️ **15 min**
 
 
-- [ ] 2. Data fetcher module
+- [x] 2. Data fetcher module
   - Implement `src/data/fetch_market_data.py`:
     - `fetch_ticker(ticker, period="1y")` — yfinance wrapper with <50 row check
-    - `fetch_batch(tickers)` — sequential fetch (ThreadPool deferred)
+    - `fetch_batch(tickers)` — sequential fetch ⚠️ **(ThreadPool deferred to MVP1b)**
   - 1 smoke test: `tests/test_fetch.py` — mock yfinance, verify FetchResult structure
   - _Requirements: 2.1–2.4_
   - ⏱️ **15 min**
 
 
-- [ ] 3. Indicator calculator
+- [x] 3. Indicator calculator
   - Implement `src/features/indicator_calculator.py`:
     - `compute_rsi`, `compute_macd`, `compute_bollinger_bands`, `compute_sma`, `compute_ema`, `compute_volume_trend`, `compute_indicators`
   - 1 smoke test: `tests/test_indicators.py` — synthetic 252-row DataFrame produces finite IndicatorSet
@@ -43,16 +49,16 @@ Testing stack (basic):
   - ⏱️ **15 min**
 
 
-- [ ] 4. Bullish scorer
+- [x] 4. Bullish scorer
   - Implement `src/models/bullish_scorer.py`:
     - `score_rsi`, `score_macd`, `score_bollinger`, `score_moving_average`, `score_volume`
     - `derive_confidence`, `compute_projected_range`, `score_ticker`, `rank_tickers`
-  - 1 smoke test: `tests/test_scorer.py` — verify score in [0,100] and top-10 length
+  - 1 smoke test: `tests/test_scorer.py` — verify score in [0,100] and returns ALL ranked tickers (not top-10)
   - _Requirements: 4.1–4.8, 5.1–5.2_
   - ⏱️ **15 min**
 
 
-- [ ] 5. FastAPI app + routes + cache
+- [x] 5. FastAPI app + routes + cache
   - Implement `src/api/cache.py` — simple dict with get/put/clear
   - Implement `src/api/routes/analyze.py` — POST /api/v1/analyze
   - Implement `src/api/routes/ticker.py` — GET /api/v1/ticker/{ticker}
@@ -62,43 +68,44 @@ Testing stack (basic):
   - ⏱️ **20 min**
 
 
-- [ ] 6. Observability backend (SQLite store + middleware + routes)
+- [x] 6. Observability backend (SQLite store + middleware + routes)
   - `src/observability/store.py` — ✅ Already built (init_db, record_metric, record_error, etc.)
-  - Implement `src/observability/middleware.py` — ObservabilityMiddleware (request_count, duration, errors)
-  - Implement `src/observability/timing.py` — @timed decorator + TimingContext
-  - Implement `src/api/routes/observability.py` — 4 GET endpoints (/metrics, /errors, /ticker-health, /faq)
-  - Wire middleware + observability router into main.py; call init_db() on startup
-  - 1 smoke test: `tests/test_observability_middleware.py` — request records a metric
+  - Implement `src/observability/middleware.py` — ObservabilityMiddleware (request_count, duration, errors) ✅
+  - Implement `src/observability/timing.py` — @timed decorator + TimingContext ⚠️ **Defined but NOT WIRED** (decorator never applied to any function)
+  - Implement `src/api/routes/observability.py` — 4 GET endpoints (/metrics, /errors, /ticker-health, /faq) ✅
+  - Wire middleware + observability router into main.py; call init_db() on startup ✅
+  - `update_ticker_health()` — ⚠️ **Defined but NOT WIRED** (never called from routes)
+  - 1 smoke test: `tests/test_observability_middleware.py` — request records a metric ✅
   - _Requirements: 10.1–10.9_
   - ⏱️ **20 min**
 
 
-- [ ] 7. FAQ knowledge base
-  - Create `docs/faq.json` — 28+ entries across 4 categories
-  - 1 smoke test: `tests/test_faq.py` — valid JSON, 4 categories, entries have required fields
+- [x] 7. FAQ knowledge base
+  - Create `docs/faq.json` — 28+ entries across **5 categories** (originally planned 4; added 1 extra)
+  - 1 smoke test: `tests/test_faq.py` — valid JSON, 5 categories, entries have required fields
   - _Requirements: 10.15_
   - ⏱️ **10 min**
 
 
-- [ ] 8. Frontend — full app (AnalysisPage + ObservabilityPage)
-  - Scaffold React + Vite + Cloudscape project under `frontend/`
-  - Implement `frontend/src/api/stockApi.js` — analyzeStocks(), getTickerDetail()
-  - Implement `frontend/src/api/observabilityApi.js` — getMetrics(), getErrors(), getTickerHealth(), getFaq()
-  - Implement `frontend/src/components/TickerInputForm.jsx` — input + submit
-  - Implement `frontend/src/pages/AnalysisPage.jsx` — table + drawer trigger
-  - Implement `frontend/src/components/StockDetailDrawer.jsx` — indicator breakdown + Recharts chart
-  - Implement `frontend/src/pages/ObservabilityPage.jsx` — 3-tab layout
-  - Implement `frontend/src/components/MetricsPanel.jsx` — metric cards + ticker health table
-  - Implement `frontend/src/components/ErrorLogPanel.jsx` — error table + filter + pagination
-  - Implement `frontend/src/components/FaqPanel.jsx` — searchable accordion
-  - Implement `frontend/src/App.jsx` — top-level tabs (Analysis / Observability)
-  - Configure `vite.config.js` with proxy to backend
+- [x] 8. Frontend — full app (AnalysisPage + ObservabilityPage)
+  - Scaffold React + Vite + Cloudscape project under `frontend/` ✅
+  - Implement `frontend/src/api/stockApi.js` — analyzeStocks(), getTickerDetail() ✅
+  - Implement `frontend/src/api/observabilityApi.js` — getMetrics(), getErrors(), getTickerHealth(), getFaq() ✅
+  - Implement `frontend/src/components/TickerInputForm.jsx` — input + submit ✅
+  - Implement `frontend/src/pages/AnalysisPage.jsx` — table + drawer trigger ✅
+  - Implement `frontend/src/components/StockDetailDrawer.jsx` — indicator breakdown + Recharts chart ✅
+  - Implement `frontend/src/pages/ObservabilityPage.jsx` — **2-tab layout** (originally planned 3-panel; FAQ moved to separate top-level tab)
+  - Implement `frontend/src/components/MetricsPanel.jsx` — metric cards + ticker health table ✅
+  - Implement `frontend/src/components/ErrorLogPanel.jsx` — error table + filter + pagination ✅
+  - Implement `frontend/src/components/FaqPanel.jsx` — searchable accordion ✅
+  - Implement `frontend/src/App.jsx` — **5 top-level tabs** (Analysis, Live Data, RAG Reference, Observability, FAQ & Guide) — originally planned 2 tabs (Analysis / Observability)
+  - Configure `vite.config.js` with proxy to backend ✅
   - No unit tests — manual QA verification
   - _Requirements: 1.1–1.3, 1.6, 6.1–6.6, 7.1–7.3, 10.10–10.14_
   - ⏱️ **30 min**
 
 
-- [ ] 9. Integration verification
+- [x] 9. Integration verification
   - Run `pytest tests/ -v` — all smoke tests GREEN
   - Start backend: `uvicorn src.api.main:app --reload`
   - Start frontend: `cd frontend && npm run dev`
@@ -135,6 +142,10 @@ Testing stack (basic):
 - ThreadPoolExecutor for batch fetching (currently sequential)
 - Strict gate enforcement
 - Full Swagger annotations with example payloads
+- Wiring `@timed` decorator to analyze route and data fetch functions
+- Calling `update_ticker_health()` from the analyze pipeline after scoring
+- Cache hit/miss metric emission in the ticker detail route
+- structlog configuration (listed in requirements.txt but currently uses standard `logging`)
 
 ---
 

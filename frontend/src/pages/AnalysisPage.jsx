@@ -11,7 +11,6 @@ import {
   Pagination,
   TextFilter,
   Popover,
-  StatusIndicator,
 } from '@cloudscape-design/components';
 import TickerInputForm from '../components/TickerInputForm';
 import StockDetailDrawer from '../components/StockDetailDrawer';
@@ -19,11 +18,19 @@ import { analyzeStocks } from '../api/stockApi';
 
 const PAGE_SIZE = 10;
 
-function confidenceColor(confidence) {
-  return { High: 'green', Medium: 'blue', Low: 'grey' }[confidence] || 'grey';
+/** Gradient pill for the main bullish score */
+function ScorePill({ score }) {
+  const level = score >= 75 ? 'high' : score >= 50 ? 'medium' : 'low';
+  return <span className={`score-pill score-pill--${level}`}>{score}</span>;
 }
 
-/** Column header with tooltip/legend */
+/** Color-coded badge for sub-scores (0–20) */
+function SubScoreBadge({ value }) {
+  const level = value >= 15 ? 'high' : value >= 10 ? 'medium' : 'low';
+  return <span className={`sub-badge sub-badge--${level}`}>{value}</span>;
+}
+
+/** Popover column header with indicator explanation */
 function ColumnHeader({ label, description }) {
   return (
     <Popover
@@ -31,27 +38,24 @@ function ColumnHeader({ label, description }) {
       position="top"
       size="medium"
       triggerType="text"
-      content={<Box padding="s">{description}</Box>}
+      content={<Box padding="s" fontSize="body-s">{description}</Box>}
     >
-      <Box fontWeight="bold" color="text-status-info" fontSize="body-s">
-        {label}
-      </Box>
+      <span style={{ cursor: 'help', borderBottom: '1px dashed #64748b' }}>{label}</span>
     </Popover>
   );
 }
 
-// Column legend descriptions
+// Indicator legend descriptions for popovers
 const LEGENDS = {
-  rsi: "RSI (Relative Strength Index) — Momentum oscillator measuring speed of price changes. Score 0-20: <30 oversold (20pts), 30-50 (15pts), 50-70 (10pts), >70 overbought (0pts).",
-  macd: "MACD (Moving Average Convergence Divergence) — Trend-following momentum. Score 0-20: Above signal + rising histogram (20pts), above signal (12pts), below signal (0pts).",
-  bb: "BB (Bollinger Bands) — Volatility bands around a moving average. Score 0-20: Below lower band (20pts), lower-to-mid (12pts), mid-to-upper (6pts), above upper (0pts).",
-  ma: "MA (Moving Averages) — SMA50 vs SMA200 crossover signal. Score 0-20: Golden cross SMA50>SMA200 (20pts), price above SMA50 (10pts), below SMA50 (0pts).",
-  volume: "Vol (Volume Trend) — 5-day vs 20-day average volume comparison. Score 0-20: 5d avg >120% of 20d (20pts), 80-120% (10pts), <80% low volume (0pts).",
+  rsi: "RSI (14) — Momentum oscillator. Score: <30 oversold = 20pts, 30–50 = 15pts, 50–70 = 10pts, >70 overbought = 0pts.",
+  macd: "MACD (12/26/9) — Trend momentum. Score: Above signal + rising = 20pts, above signal = 12pts, below = 0pts.",
+  bb: "Bollinger Bands (20/2σ) — Volatility. Score: Below lower = 20pts, lower→mid = 12pts, mid→upper = 6pts, above upper = 0pts.",
+  ma: "Moving Averages — SMA50 vs SMA200. Score: Golden cross = 20pts, above SMA50 = 10pts, below = 0pts.",
+  volume: "Volume Trend — 5d vs 20d avg. Score: >120% = 20pts, 80–120% = 10pts, <80% = 0pts.",
 };
 
 /**
- * AnalysisPage - Main page with ticker input, paginated results table, and detail drawer.
- * Exports loading state for App.jsx to disable other tabs during analysis.
+ * AnalysisPage — Main analysis view with ticker input, results table, and detail drawer.
  */
 export default function AnalysisPage({ onLoadingChange }) {
   const [results, setResults] = useState([]);
@@ -92,12 +96,10 @@ export default function AnalysisPage({ onLoadingChange }) {
     }
   }
 
-  // Filter results by ticker name
   const filteredResults = results.filter(
     (item) => !filterText || item.ticker.toLowerCase().includes(filterText.toLowerCase())
   );
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredResults.length / PAGE_SIZE);
   const paginatedResults = filteredResults.slice(
     (currentPage - 1) * PAGE_SIZE,
@@ -109,16 +111,13 @@ export default function AnalysisPage({ onLoadingChange }) {
       id: 'rank',
       header: '#',
       cell: (item) => filteredResults.indexOf(item) + 1,
-      width: 50,
+      width: 45,
     },
     {
       id: 'ticker',
       header: 'Ticker',
       cell: (item) => (
-        <Link
-          onFollow={() => setSelectedTicker(item)}
-          data-testid={`ticker-link-${item.ticker}`}
-        >
+        <Link onFollow={() => setSelectedTicker(item)} data-testid={`ticker-link-${item.ticker}`}>
           {item.ticker}
         </Link>
       ),
@@ -126,48 +125,55 @@ export default function AnalysisPage({ onLoadingChange }) {
     },
     {
       id: 'bullish_score',
-      header: 'Bullish Score',
-      cell: (item) => (
-        <span className={item.bullish_score >= 75 ? 'score-high' : item.bullish_score >= 50 ? 'score-medium' : 'score-low'}>
-          {item.bullish_score}/100
-        </span>
-      ),
+      header: 'Score',
+      cell: (item) => <ScorePill score={item.bullish_score} />,
       sortingField: 'bullish_score',
+      width: 80,
     },
     {
       id: 'confidence',
       header: 'Confidence',
-      cell: (item) => <Badge color={confidenceColor(item.confidence)}>{item.confidence}</Badge>,
+      cell: (item) => {
+        const color = { High: 'green', Medium: 'blue', Low: 'grey' }[item.confidence] || 'grey';
+        return <Badge color={color}>{item.confidence}</Badge>;
+      },
+      width: 100,
     },
     {
       id: 'rsi',
       header: <ColumnHeader label="RSI" description={LEGENDS.rsi} />,
-      cell: (item) => `${item.sub_scores.rsi}/20`,
+      cell: (item) => <SubScoreBadge value={item.sub_scores.rsi} />,
+      width: 65,
     },
     {
       id: 'macd',
       header: <ColumnHeader label="MACD" description={LEGENDS.macd} />,
-      cell: (item) => `${item.sub_scores.macd}/20`,
+      cell: (item) => <SubScoreBadge value={item.sub_scores.macd} />,
+      width: 65,
     },
     {
       id: 'bollinger',
       header: <ColumnHeader label="BB" description={LEGENDS.bb} />,
-      cell: (item) => `${item.sub_scores.bollinger}/20`,
+      cell: (item) => <SubScoreBadge value={item.sub_scores.bollinger} />,
+      width: 65,
     },
     {
       id: 'moving_avg',
       header: <ColumnHeader label="MA" description={LEGENDS.ma} />,
-      cell: (item) => `${item.sub_scores.moving_avg}/20`,
+      cell: (item) => <SubScoreBadge value={item.sub_scores.moving_avg} />,
+      width: 65,
     },
     {
       id: 'volume',
       header: <ColumnHeader label="Vol" description={LEGENDS.volume} />,
-      cell: (item) => `${item.sub_scores.volume}/20`,
+      cell: (item) => <SubScoreBadge value={item.sub_scores.volume} />,
+      width: 65,
     },
     {
       id: 'range',
       header: '30-Day Range',
       cell: (item) => `₹${item.projected_lower?.toFixed(0)} – ₹${item.projected_upper?.toFixed(0)}`,
+      width: 140,
     },
   ];
 
@@ -198,22 +204,19 @@ export default function AnalysisPage({ onLoadingChange }) {
 
       {results.length > 0 && (
         <>
-          {/* Column Legend */}
+          {/* Legend */}
           <Alert type="info" data-testid="column-legend">
-            <strong>Column Legend:</strong>{' '}
-            <strong>RSI</strong> = Relative Strength Index •{' '}
-            <strong>MACD</strong> = Moving Average Convergence Divergence •{' '}
-            <strong>BB</strong> = Bollinger Bands •{' '}
-            <strong>MA</strong> = Moving Averages (SMA50/200) •{' '}
-            <strong>Vol</strong> = Volume Trend — <em>Hover column headers for scoring details</em>
+            <strong>Legend:</strong>{' '}
+            RSI = Relative Strength Index · MACD = Moving Avg Convergence/Divergence · BB = Bollinger Bands · MA = Moving Averages · Vol = Volume Trend
+            — <em>hover column headers for scoring rules</em>
           </Alert>
 
           <Table
             header={
               <Header
                 variant="h2"
-                counter={`(${filteredResults.length} of ${results.length})`}
-                description="Click a ticker for detailed breakdown. Hover column headers for indicator descriptions."
+                counter={`(${filteredResults.length})`}
+                description="Click any ticker for full indicator breakdown"
               >
                 Bullish Stock Rankings
               </Header>
@@ -221,8 +224,8 @@ export default function AnalysisPage({ onLoadingChange }) {
             columnDefinitions={columnDefinitions}
             items={paginatedResults}
             sortingDisabled
-            variant="full-page"
             stickyHeader
+            stripedRows
             data-testid="results-table"
             filter={
               <TextFilter

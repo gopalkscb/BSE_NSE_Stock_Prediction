@@ -3,7 +3,6 @@ import {
   Container,
   Header,
   SpaceBetween,
-  ColumnLayout,
   Box,
   Table,
   StatusIndicator,
@@ -12,7 +11,8 @@ import {
 import { getMetrics, getTickerHealth } from '../api/observabilityApi';
 
 /**
- * MetricsPanel - Shows live metric cards and ticker health table.
+ * MetricsPanel - Shows live metric cards in a tabular grid and ticker health table.
+ * Uses CSS .metrics-grid / .metric-card classes for clean data presentation.
  */
 export default function MetricsPanel() {
   const [metrics, setMetrics] = useState(null);
@@ -55,50 +55,68 @@ export default function MetricsPanel() {
 
   return (
     <SpaceBetween size="l">
-      {/* Metric cards */}
+      {/* Metric cards — tabular grid layout */}
       <Container header={<Header variant="h3">Live Metrics</Header>}>
-        <ColumnLayout columns={4} variant="text-grid">
-          <Box data-testid="metric-total-requests">
-            <Box variant="awsui-key-label">Total Requests</Box>
-            <Box variant="h1">{metrics?.total_requests ?? 0}</Box>
-          </Box>
-          <Box data-testid="metric-avg-latency">
-            <Box variant="awsui-key-label">Avg Latency</Box>
-            <Box variant="h1">{(metrics?.avg_latency_ms ?? 0).toFixed(0)} ms</Box>
-          </Box>
-          <Box data-testid="metric-cache-hits">
-            <Box variant="awsui-key-label">Cache Hits</Box>
-            <Box variant="h1">{metrics?.cache_hits ?? 0}</Box>
-          </Box>
-          <Box data-testid="metric-errors">
-            <Box variant="awsui-key-label">Total Errors</Box>
-            <Box variant="h1">{metrics?.total_errors ?? 0}</Box>
-          </Box>
-        </ColumnLayout>
+        <div className="metrics-grid" data-testid="metrics-grid">
+          <div className="metric-card" data-testid="metric-total-requests">
+            <div className="metric-card__label">Total Requests</div>
+            <div className="metric-card__value metric-card__value--info">
+              {metrics?.total_requests ?? 0}
+            </div>
+          </div>
+          <div className="metric-card" data-testid="metric-avg-latency">
+            <div className="metric-card__label">Avg Latency</div>
+            <div className="metric-card__value">
+              {(metrics?.avg_latency_ms ?? 0).toFixed(0)}<span style={{ fontSize: '0.9rem', fontWeight: 400, marginLeft: '2px' }}>ms</span>
+            </div>
+          </div>
+          <div className="metric-card" data-testid="metric-cache-hits">
+            <div className="metric-card__label">Cache Hits</div>
+            <div className="metric-card__value metric-card__value--success">
+              {metrics?.cache_hits ?? 0}
+            </div>
+          </div>
+          <div className="metric-card" data-testid="metric-errors">
+            <div className="metric-card__label">Total Errors</div>
+            <div className={`metric-card__value ${(metrics?.total_errors ?? 0) > 0 ? 'metric-card__value--error' : 'metric-card__value--success'}`}>
+              {metrics?.total_errors ?? 0}
+            </div>
+          </div>
+        </div>
       </Container>
 
-      {/* Ticker health table */}
+      {/* Ticker health table — tabular data display */}
       {tickerHealth.length > 0 && (
-        <Table
-          header={<Header variant="h3">Ticker Health</Header>}
-          columnDefinitions={[
-            { id: 'ticker', header: 'Ticker', cell: (item) => item.ticker },
-            { id: 'requests', header: 'Requests', cell: (item) => item.total_requests },
-            { id: 'failures', header: 'Failures', cell: (item) => item.total_failures },
-            {
-              id: 'failure_rate',
-              header: 'Failure Rate',
-              cell: (item) => (
-                <StatusIndicator type={item.failure_rate > 0.5 ? 'error' : item.failure_rate > 0.2 ? 'warning' : 'success'}>
-                  {(item.failure_rate * 100).toFixed(1)}%
-                </StatusIndicator>
-              ),
-            },
-            { id: 'last_failure', header: 'Last Failure', cell: (item) => item.last_failure_reason || '—' },
-          ]}
-          items={tickerHealth}
-          data-testid="ticker-health-table"
-        />
+        <div className="data-table">
+          <Table
+            header={<Header variant="h3">Ticker Health</Header>}
+            columnDefinitions={[
+              { id: 'ticker', header: 'Ticker', cell: (item) => <strong>{item.ticker}</strong> },
+              {
+                id: 'requests',
+                header: 'Requests',
+                cell: (item) => item.total_requests,
+              },
+              {
+                id: 'failures',
+                header: 'Failures',
+                cell: (item) => item.total_failures,
+              },
+              {
+                id: 'failure_rate',
+                header: 'Failure Rate',
+                cell: (item) => (
+                  <StatusIndicator type={item.failure_rate > 0.5 ? 'error' : item.failure_rate > 0.2 ? 'warning' : 'success'}>
+                    {(item.failure_rate * 100).toFixed(1)}%
+                  </StatusIndicator>
+                ),
+              },
+              { id: 'last_failure', header: 'Last Failure', cell: (item) => item.last_failure_reason || '—' },
+            ]}
+            items={tickerHealth}
+            data-testid="ticker-health-table"
+          />
+        </div>
       )}
     </SpaceBetween>
   );
