@@ -149,10 +149,12 @@ pytest tests/ -v                         # All tests (MVP1 + MVP2)
 ---
 ---
 name: mvp3-mobile
-description: MVP3 native mobile app for Android and iOS using React Native + Expo. Also includes MVP1b test hardening (hypothesis, Playwright, full integration suite). Use when implementing the mobile app shell, push notifications, offline-first cache, biometric auth, app store release pipeline, or backfilling MVP1 test coverage.
+description: MVP3 native mobile app for Android and iOS using React Native + Expo. Google Sign-In authentication (Gmail federation), 5-indicator screener, live data lookup, watchlist with MMKV offline cache. Use when implementing the mobile app, push notifications, or biometric auth.
 ---
 
 # MVP3 — Native Mobile Application (Android & iOS)
+
+## Status: 🟡 Built (needs Firebase setup for push notifications)
 
 ## Spec Location
 - Requirements: `.kiro/specs/mvp3-mobile/requirements.md`

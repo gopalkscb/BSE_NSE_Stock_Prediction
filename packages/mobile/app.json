@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "BSE NSE Stock Predictor",
+    "slug": "bse-nse-stock-predictor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f766e"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bsense.stockpredictor",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["com.googleusercontent.apps.YOUR_IOS_CLIENT_ID"]
+          }
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f766e"
+      },
+      "package": "com.bsense.stockpredictor"
+    },
+    "scheme": "bsense-stock",
+    "plugins": [
+      "expo-secure-store",
+      "expo-auth-session"
+    ]
+  }
+}

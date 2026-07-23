@@ -81,14 +81,29 @@ body {
 [class*="awsui_content"],
 [class*="awsui_main"] {
   max-height: none !important;
-  overflow: visible !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scroll-behavior: smooth !important;
 }
 
 /* Ensure the content area expands to fit all data */
 [class*="awsui_content-wrapper"] {
   max-height: none !important;
-  overflow: visible !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   height: auto !important;
+  scroll-behavior: smooth !important;
+}
+
+/* Tab content panels — each tab scrolls independently */
+[class*="awsui_tabs-content"],
+[class*="awsui_tab-content"],
+[class*="awsui_tabs-content-wrapper"] {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scroll-behavior: smooth !important;
+  max-height: calc(100vh - 160px) !important;
+  padding-bottom: 32px !important;
 }
 
 * {
@@ -394,24 +409,47 @@ body {
 }
 
 /* ── Scrollbar Styling ────────────────────────────────────── */
+
+/* Enable smooth scroll globally */
+html {
+  scroll-behavior: smooth !important;
+}
+
+/* Wider, more visible scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(240, 253, 250, 0.8);
   border-radius: var(--radius-full);
+  margin: 4px 0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--theme-border-strong);
+  background: linear-gradient(180deg, var(--theme-border-strong), var(--theme-primary-light));
   border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
   transition: background var(--transition-fast);
+  min-height: 40px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--theme-primary-light);
+  background: linear-gradient(180deg, var(--theme-primary-light), var(--theme-primary));
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--theme-primary);
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-border-strong) rgba(240, 253, 250, 0.8);
 }
 
 /* ── Animations ───────────────────────────────────────────── */
@@ -694,4 +732,16 @@ body {
 
 .metric-card--clickable:hover .metric-card__hint {
   opacity: 1;
+}
+
+
+/* ── App Footer — Data Source Indicator ───────────────────── */
+.app-footer {
+  margin-top: var(--space-xl);
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid var(--theme-border);
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--theme-text-muted);
+  letter-spacing: 0.01em;
 }
