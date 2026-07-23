@@ -14,15 +14,17 @@ The Bullish Stock Predictor is a full-stack application for Indian equity market
 
 ## Key Features
 
-- **5-tab UI**: Analysis (bulk scoring), Live Data (single ticker lookup), RAG Reference (AI Q&A + evaluation), Observability, FAQ
+- **5-tab UI**: Analysis (bulk scoring), Intraday (single ticker lookup), RAG Reference (AI Q&A + evaluation), Observability, FAQ
 - **Top-ranked results table**: Ticker, Bullish Score (gradient pill), Confidence Badge, RSI/MACD/BB/MA/Volume sub-score badges, 30-day price range (paginated at 10 per page, Cloudscape stripedRows)
-- **Live Data tab**: Single ticker lookup with full indicator breakdown and signal status
+- **Intraday tab**: Single ticker lookup using Alpha Vantage GLOBAL_QUOTE (free, 25 calls/day) + yfinance intraday bars (5m intervals). Shows intraday RSI, MACD, VWAP, trend, score, and price chart. No 30-day projection.
 - **RAG Reference tab**: Conversational AI Q&A grounded in financial news (Pinecone + OpenAI hybrid retrieval) + RAG evaluation metrics dashboard
 - **Per-stock detail drawer**: Full indicator breakdown with sub-scores, signal explanations, and a 90-day price chart (Recharts line chart with SMA-50 and SMA-200 overlays)
+- **ETF presets**: GOLDBEES.NS, SILVERBEES.NS, NIFTYBEES.NS + 7 others available in ticker input dropdown
 - **Swagger UI** (`/docs`) and **ReDoc** (`/redoc`) for interactive API exploration
 - **In-memory session cache** — scored tickers are cached per server session for instant detail lookups
 - **Partial failure handling** — if some tickers fail to fetch, successful ones are still ranked and returned
-- **Font**: Calibri (system font stack, no Google Fonts dependency)
+- **Global page footer** — shows API data source per tab
+- **Font**: DM Sans (Google Fonts, imported in theme.css)
 
 ## Scoring Model (rule-based, no ML)
 
@@ -53,13 +55,14 @@ Pre-built, curated ticker lists live in `data/tickers/` and are committed to the
 | `NIFTY_BANK` / `NIFTY_IT` / `NIFTY_PHARMA` / `NIFTY_AUTO` | NSE | `<SYMBOL>.NS` | 10–20 each |
 | `BSE_TICKERS` | BSE | `<SCRIP_CODE>.BO` | ~500 (BSE 500 + liquid mid/small-cap) |
 | `SENSEX_30` | BSE | `<SCRIP_CODE>.BO` | 30 |
+| ETF presets | NSE | `<SYMBOL>.NS` | 10 (GOLDBEES, SILVERBEES, NIFTYBEES, etc.) |
 
 Import via `from data.tickers import NSE_TICKERS, NIFTY_50, BSE_TICKERS` etc.
 
 ## Constraints and Scope
 
 - MVP uses **rule-based scoring only** — no ML model training in this iteration
-- Data source is **yfinance exclusively** — no paid data feeds
+- Data sources: **yfinance** (primary for daily OHLCV and intraday bars) + **Alpha Vantage** (optional, GLOBAL_QUOTE for Intraday tab, free tier 25 calls/day)
 - Backend cache is **in-memory** — no database or persistent storage
 - Maximum **500 tickers** per analysis request
 - Minimum **50 trading days** of data required per ticker; tickers with less are excluded

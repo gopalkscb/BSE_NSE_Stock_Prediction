@@ -56,8 +56,12 @@
 
 ### Current state (as of 2026-07-23)
 - **Python**: 17 test files (9 MVP1 smoke tests + 8 MVP4 RAG tests) — all compile clean
-- **Playwright E2E**: 15 spec files with ~107 tests written (covers MVP1, MVP1a, MVP2, MVP4 scenarios) — `@playwright/test` ^1.61.1 installed
+- **Playwright E2E**: 15 spec files with 119 tests written (covers MVP1, MVP1a, MVP2, MVP4 scenarios); 6 projects (mvp1-isolation, mvp1-fullstack, mvp1a, mvp2, mvp4, firefox) — `@playwright/test` ^1.61.1 installed
 - **Vitest / React Testing Library**: NOT yet installed — planned for MVP1b
+
+### Data Sources
+- **yfinance**: Primary data source for daily OHLCV (1yr history, Analysis tab) and intraday bars (`period='1d'`, `interval='5m'`, Intraday tab)
+- **Alpha Vantage**: GLOBAL_QUOTE endpoint (free tier, 25 calls/day) for live price + change data on the Intraday tab
 
 ### MVP1 scope (basic smoke tests only)
 MVP1 uses basic pytest smoke tests (1–3 per module) with a lite gate rule: each module needs at least 1 passing test before proceeding. No property-based tests, no frontend unit tests in MVP1.

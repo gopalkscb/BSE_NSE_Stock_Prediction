@@ -140,7 +140,7 @@ pytest tests/ --cov=src --cov-report=term-missing
 # JavaScript (MVP1/MVP2 web)
 cd frontend && npx vitest run
 
-# E2E (119 tests across 15 spec files, 6 Playwright projects)
+# E2E (119 tests across 15 spec files, 6 Playwright projects: mvp1-isolation, mvp1-fullstack, mvp1a, mvp2, mvp4, firefox)
 cd frontend && npx playwright test
 
 # Mobile E2E (MVP3)
@@ -165,7 +165,7 @@ npm audit --audit-level=high
 | `BATCH_TIMEOUT_SECONDS` | `90` | 2+ | yfinance batch timeout |
 | `TICKER_TIMEOUT_SECONDS` | `15` | 2+ | Per-ticker fetch timeout |
 | `API_MONTHLY_BUDGET_USD` | `10.0` | 1a+ | Monthly API cost alert threshold |
-| `ALPHA_VANTAGE_API_KEY` | — | 1a+ | Alpha Vantage data source |
+| `ALPHA_VANTAGE_API_KEY` | — | 1+ | Alpha Vantage GLOBAL_QUOTE (Intraday tab) + data source (MVP1a+) |
 | `BSE_API_BASE_URL` | `https://api.bseindia.com` | 1a+ | BSE India API base URL |
 | `NSE_API_BASE_URL` | `https://www.nseindia.com/api` | 1a+ | NSE India API base URL |
 | `YFINANCE_RATE_LIMIT_PER_MIN` | `100` | 1a+ | yfinance rate limit |
@@ -189,8 +189,10 @@ Create a `.env` file at the project root — never commit it.
 
 - **NSE**: `RELIANCE.NS`, `TCS.NS`, `INFY.NS`
 - **BSE**: `500325.BO`, `RELIANCE.BO`
+- **ETFs**: `GOLDBEES.NS`, `SILVERBEES.NS`, `NIFTYBEES.NS`, etc.
 - Max 500 tickers per request
-- Min 50 trading days of data required per ticker
+- Min 50 trading days of data required per ticker (Analysis tab)
+- Intraday tab uses Alpha Vantage GLOBAL_QUOTE + yfinance intraday bars (no min history required)
 
 ---
 

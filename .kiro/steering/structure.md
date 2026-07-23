@@ -16,11 +16,13 @@ BSE_NSE_Stock_Prediction/
 │   │       ├── __init__.py
 │   │       ├── analyze.py          # POST /api/v1/analyze
 │   │       ├── ticker.py           # GET  /api/v1/ticker/{ticker}
+│   │       ├── intraday.py         # GET  /api/v1/intraday/{ticker} (Alpha Vantage + yfinance)
 │   │       ├── observability.py    # GET  /api/v1/observability/* (metrics, errors, health, faq)
 │   │       └── rag.py              # POST /api/v4/rag/ingest, /query; GET /status, /eval/*
 │   ├── data/
 │   │   ├── __init__.py
-│   │   └── fetch_market_data.py    # yfinance wrapper; FetchResult; batch fetching
+│   │   ├── fetch_market_data.py    # yfinance wrapper; FetchResult; batch fetching
+│   │   └── alpha_vantage_intraday.py # Alpha Vantage GLOBAL_QUOTE + yfinance intraday bars
 │   ├── features/
 │   │   ├── __init__.py
 │   │   └── indicator_calculator.py # RSI, MACD, Bollinger Bands, SMA, EMA, Volume
@@ -39,7 +41,8 @@ BSE_NSE_Stock_Prediction/
 │       ├── retriever.py            # Hybrid retrieval: dense (OpenAI) + sparse (BM25) + RRF
 │       ├── generator.py            # AI signal explanations (GPT-4o-mini, grounded in context)
 │       ├── evaluator.py            # RAG evaluation: precision@k, recall@k, MRR, faithfulness
-│       ├── eval_store.py           # SQLite store for evaluation results + cost tracking
+│       ├── eval_store.py           # SQLite store for evaluation results + replace-on-threshold pruning (50)
+│       ├── seed_eval.py            # Auto-seed 20 eval records + 400 per-query records on startup
 │       └── orchestrator.py         # APScheduler pipeline orchestration + circuit breaker
 │
 ├── tests/                          # pytest test suite
@@ -61,18 +64,18 @@ BSE_NSE_Stock_Prediction/
 │   ├── test_rag_eval_storage.py    # Eval storage tests (MVP4)
 │   └── test_rag_orchestration.py   # Orchestration + circuit breaker tests (MVP4)
 │
-├── frontend/                       # React + Cloudscape frontend (Calibri font, no Google Fonts)
+├── frontend/                       # React + Cloudscape frontend (DM Sans font, custom teal theme)
 │   ├── src/
-│   │   ├── App.jsx                 # Root component; 5 tabs: Analysis, Live Data, RAG Reference, Observability, FAQ
-│   │   ├── theme.css               # Custom theme: Calibri font-family, gradient pills, color-coded badges
+│   │   ├── App.jsx                 # Root component; 5 tabs: Analysis, Intraday, RAG Reference, Observability, FAQ
+│   │   ├── theme.css               # Custom theme: DM Sans font-family, green-blue teal palette, gradient pills, color-coded badges
 │   │   ├── data/
-│   │   │   └── tickerPresets.js    # Pre-built ticker list presets (NIFTY_50, SENSEX_30, etc.)
+│   │   │   └── tickerPresets.js    # Pre-built ticker list presets (NIFTY_50, SENSEX_30, ETFs, etc.)
 │   │   ├── api/
 │   │   │   ├── stockApi.js         # analyzeStocks(), getTickerDetail()
 │   │   │   └── observabilityApi.js # getMetrics(), getErrors(), getTickerHealth(), getFaq()
 │   │   ├── pages/
 │   │   │   ├── AnalysisPage.jsx    # Main view: input + results table (stripedRows, gradient pills) + drawer
-│   │   │   ├── LiveDataPage.jsx    # Single ticker lookup with live price display (MVP1a/MVP4)
+│   │   │   ├── LiveDataPage.jsx    # Intraday tab: Alpha Vantage GLOBAL_QUOTE + yfinance intraday (RSI, MACD, VWAP, score)
 │   │   │   └── ObservabilityPage.jsx # Observability tab: 3-panel layout
 │   │   └── components/
 │   │       ├── TickerInputForm.jsx  # Cloudscape Form + validation
@@ -83,7 +86,7 @@ BSE_NSE_Stock_Prediction/
 │   │       ├── MetricsPanel.jsx    # Live metrics cards + ticker health table
 │   │       ├── ErrorLogPanel.jsx   # Paginated error/warning log table
 │   │       └── FaqPanel.jsx        # Searchable FAQ accordion (5 categories)
-│   ├── e2e/                        # Playwright E2E test suites (15 spec files)
+│   ├── e2e/                        # Playwright E2E test suites (15 spec files, 119 tests, 6 projects)
 │   │   ├── ticker-input.spec.js           # Ticker input form tests
 │   │   ├── analysis-page.spec.js          # Analysis results page tests
 │   │   ├── stock-detail-drawer.spec.js    # Detail drawer tests
@@ -104,7 +107,7 @@ BSE_NSE_Stock_Prediction/
 │   └── package.json
 │
 ├── config/                         # Pipeline and service configuration (committed)
-│   └── rag_pipeline.yaml           # RAG ingestion schedule, RSS feeds, chunking params, model config
+│   └── rag_pipeline.yaml           # RAG ingestion schedule, RSS feeds (financial + commodity), chunking params, model config
 │
 ├── data/                           # Market data, ticker reference lists, and runtime DBs
 │   ├── tickers/                    # Pre-built ticker lists (committed, not gitignored)
@@ -154,7 +157,7 @@ BSE_NSE_Stock_Prediction/
 - `frontend/src/pages/` — page-level components (route views); one file per page
 - `frontend/src/components/` — reusable components; co-located `*.test.jsx` file required
 - Cloudscape components are imported from `@cloudscape-design/components`; global styles imported once in `App.jsx`
-- Font: **Calibri** (system font stack) — no Google Fonts; set in `theme.css`
+- Font: **DM Sans** (Google Fonts, imported in theme.css) — custom teal palette
 - Results table: `stripedRows`, gradient score pills, color-coded sub-score badges
 - `data-testid` attributes are required on all interactive and key display elements for Playwright selectors
 - `frontend/e2e/` — Playwright tests only; no unit test code here
@@ -189,6 +192,7 @@ BSE_NSE_Stock_Prediction/
 - `.env` at project root — never commit; loaded via `python-dotenv`
 - `FRONTEND_ORIGIN` — CORS allowed origin for the backend (default: `http://localhost:5173`)
 - `VITE_API_URL` — backend URL used by the frontend (default: `http://localhost:8000`)
+- `ALPHA_VANTAGE_API_KEY` — Alpha Vantage GLOBAL_QUOTE for Intraday tab (free tier, 25 calls/day)
 - `PINECONE_API_KEY` — Pinecone vector DB API key (MVP4)
 - `OPENAI_API_KEY` — OpenAI embeddings + generation (MVP4)
 - `OPENAI_EMBEDDING_MODEL` — Embedding model (default: `text-embedding-3-small`)

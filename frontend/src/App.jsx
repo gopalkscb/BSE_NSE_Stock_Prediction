@@ -22,6 +22,15 @@ export default function App() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('analysis');
 
+  // Data source label per active tab
+  const dataSourceLabel = {
+    'analysis': 'Market data: yfinance (1-year daily OHLCV, free)',
+    'live-data': 'Intraday data: Alpha Vantage GLOBAL_QUOTE + yfinance (5-min bars, free)',
+    'rag-reference': 'RAG pipeline: OpenAI embeddings + Pinecone vector DB + RSS feeds',
+    'observability': 'Metrics: SQLite observability store (local)',
+    'faq': 'Knowledge base: Static FAQ (docs/faq.json)',
+  }[activeTab] || '';
+
   return (
     <AppLayout
       content={
@@ -49,7 +58,7 @@ export default function App() {
               },
               {
                 id: 'live-data',
-                label: analysisLoading ? '⚡ Live Data (locked)' : '⚡ Live Data',
+                label: analysisLoading ? '⚡ Intraday (locked)' : '⚡ Intraday',
                 disabled: analysisLoading,
                 content: <LiveDataPage />,
               },
@@ -74,6 +83,11 @@ export default function App() {
             ]}
             data-testid="app-tabs"
           />
+
+          {/* Global Footer — API data source */}
+          <div className="app-footer" data-testid="app-footer">
+            <span>📡 {dataSourceLabel}</span>
+          </div>
         </Box>
       }
       navigationHide

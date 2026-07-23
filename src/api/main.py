@@ -81,6 +81,10 @@ def create_app() -> FastAPI:
     app.include_router(analyze.router, tags=["analyze"])
     app.include_router(ticker.router, tags=["ticker"])
 
+    # Intraday route (Alpha Vantage)
+    from src.api.routes import intraday
+    app.include_router(intraday.router, tags=["intraday"])
+
     # Observability routes
     from src.api.routes import observability
     app.include_router(observability.router, tags=["observability"])

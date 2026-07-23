@@ -13,12 +13,16 @@ description: MVP1 rules-based web screener with 5 indicators, FastAPI backend, R
 ## Scope
 - 5 indicators: RSI, MACD, Bollinger Bands, SMA/EMA Moving Averages, Volume Trend
 - Composite Bullish Score (0–100), equal-weight sub-scores (5 × 20pts)
-- FastAPI REST API (`/api/v1/analyze`, `/api/v1/ticker/{ticker}`, `/api/v1/observability/*`)
+- FastAPI REST API (`/api/v1/analyze`, `/api/v1/ticker/{ticker}`, `/api/v1/intraday/{ticker}`, `/api/v1/observability/*`)
 - React + Cloudscape frontend (AnalysisPage, TickerInputForm, StockDetailDrawer)
-- Observability tab: Live Metrics panel, Error Log panel, FAQ/Debug Guide panel
+- **Intraday tab**: Alpha Vantage GLOBAL_QUOTE + yfinance intraday bars (5m); shows RSI, MACD, VWAP, trend, score, price chart
+- **ETF presets**: GOLDBEES.NS, SILVERBEES.NS, NIFTYBEES.NS + 7 others in ticker input dropdown
+- Observability tab: Live Metrics panel (clickable cards drill down into filtered paginated detail), Error Log panel, FAQ/Debug Guide panel
+- Observability monthly scope with auto-reset; metrics endpoint supports `?name=` filter and `?offset=` pagination
 - SQLite-backed observability store (`data/observability.db`) — metrics, errors, ticker health
 - In-memory session cache for scored results
 - Static FAQ knowledge base (`docs/faq.json` — 5 categories, 28+ entries)
+- Global page footer showing API data source per tab
 - Basic smoke tests only (1–3 per module); heavy testing deferred to MVP1b (in MVP3 scope)
 
 ## Key Commands
@@ -207,8 +211,11 @@ description: MVP4 Pinecone RAG pipeline with hybrid retrieval (OpenAI dense + BM
 - AI signal explanations (GPT-4o-mini, grounded in retrieved news)
 - Conversational ticker Q&A chat panel (AskAIPanel.jsx)
 - RAG evaluation: precision@k, recall@k, MRR, faithfulness, relevance (proxy metrics)
-- RAG evaluation dashboard with cost tracking (RAGDashboardTab.jsx)
+- **Auto-seeded evaluation data**: 20 eval records + 400 per-query records on startup; replace-on-threshold pruning (keeps latest 50)
+- **RAG Dashboard**: shows ALL metrics (precision, recall, MRR, faithfulness, answer_relevance, context_relevance, duration, cost/tokens) + per-query breakdown table
+- RAG Performance tab disabled while Ask AI chat is loading
 - Pipeline orchestration with APScheduler + circuit breaker
+- `/api/v4/rag/evaluation/latest` returns 200 with zeros (never 404) when no data
 
 ## Key Files
 - `src/rag/pinecone_client.py` — Pinecone CRUD
@@ -217,6 +224,7 @@ description: MVP4 Pinecone RAG pipeline with hybrid retrieval (OpenAI dense + BM
 - `src/rag/generator.py` — RAGGenerator (explanations + Q&A)
 - `src/rag/evaluator.py` — Evaluation metrics
 - `src/rag/eval_store.py` — SQLite evaluation storage
+- `src/rag/seed_eval.py` — Auto-seed evaluation data on startup
 - `src/rag/orchestrator.py` — APScheduler + circuit breaker
 - `src/api/routes/rag.py` — All v4 API endpoints
 - `config/rag_pipeline.yaml` — Pipeline configuration

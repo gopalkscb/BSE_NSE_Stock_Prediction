@@ -22,8 +22,12 @@ Backend and frontend fully functional. 28 Python tests passing. Custom green-blu
 - BSE ticker auto-resolution: attempts symbol → scrip code (`.BO` suffix) fallback if primary fetch fails
 - Returns **all** ranked results with 30-day projected price range (frontend paginates at 10/page)
 - Provides per-stock detail drawer with 90-day price chart (SMA overlays)
-- Observability tab: Live Metrics panel, Error Log panel, FAQ/Debug Guide panel (5 categories)
+- **Intraday tab** (renamed from "Live Data"): single ticker lookup using Alpha Vantage GLOBAL_QUOTE (free) + yfinance intraday bars (5m intervals). Shows intraday RSI, MACD, VWAP, trend, score, and price chart. No 30-day projection.
+- **ETF presets**: GOLDBEES.NS, SILVERBEES.NS, NIFTYBEES.NS + 7 others available in the ticker input dropdown
+- Observability tab: Live Metrics panel (clickable cards drill down into filtered paginated detail), Error Log panel, FAQ/Debug Guide panel (5 categories)
+- Observability monthly scope with auto-reset
 - SQLite-backed observability store for metrics, errors, and ticker health
+- Global page footer showing API data source per tab
 
 ---
 
@@ -68,7 +72,8 @@ npm run dev
 |---|---|---|
 | `POST` | `/api/v1/analyze` | Submit tickers, get all results ranked by bullish score |
 | `GET` | `/api/v1/ticker/{ticker}` | Get full indicator detail for a scored ticker |
-| `GET` | `/api/v1/observability/metrics` | Live metrics (request counts, durations) |
+| `GET` | `/api/v1/intraday/{ticker}` | Intraday indicators via Alpha Vantage + yfinance |
+| `GET` | `/api/v1/observability/metrics` | Live metrics (request counts, durations); supports `?name=` filter and `?offset=` pagination |
 | `GET` | `/api/v1/observability/errors` | Error log (paginated) |
 | `GET` | `/api/v1/observability/health` | Ticker health status |
 | `GET` | `/api/v1/observability/faq` | FAQ/Debug Guide (5 categories) |

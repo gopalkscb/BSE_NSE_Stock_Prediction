@@ -1,1 +1,7 @@
 Hi, Basically I have requirement to buildig an application where it helps give me ticker with top 10 bullish stock in the comming 30 days. I will be given you the list of tickers you want to analyze. I have list of rules. Based on these, you want to implement these rules to build this particular application. I want to build application using FastAPI  as backend and React with cloud space library. I want the front end UI library to be more professional and lightweight and also must be same as Amazon kind of UI and google kind of UI. Go through the rules that I'm going to give you and whatever rules are given I want you to implement here now. Remember I have only two hours to complete this project and based on this limitation see what things you can implement in the next couple of hours Lets try to fix and complete this with good fastapi and React with cloudspace
+
+
+Mobile apps Android
+ - Firebase project creation (for Google Auth + push notifications)
+  - Expo account setup (for EAS builds)
+  - Android Studio / Xcode for local testing

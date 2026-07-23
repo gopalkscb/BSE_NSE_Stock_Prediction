@@ -16,7 +16,8 @@ MVP4 adds a Pinecone-backed RAG pipeline with hybrid retrieval (OpenAI dense + B
 | `retriever.py` | HybridRetriever: dense + sparse + Reciprocal Rank Fusion |
 | `generator.py` | RAGGenerator: signal explanations + conversational Q&A (GPT-4o-mini) |
 | `evaluator.py` | Precision@k, recall@k, MRR, faithfulness, relevance (proxy metrics) |
-| `eval_store.py` | SQLite storage for evaluation results (`data/rag_eval.db`) |
+| `eval_store.py` | SQLite storage for evaluation results + replace-on-threshold pruning (keeps latest 50) |
+| `seed_eval.py` | Auto-seeds 20 eval records + 400 per-query records on startup when DB is empty |
 | `orchestrator.py` | APScheduler (6hr) + circuit breaker (3 failures → 15min pause) |
 
 ### API Endpoints (`/api/v4/rag/`)
@@ -32,8 +33,10 @@ MVP4 adds a Pinecone-backed RAG pipeline with hybrid retrieval (OpenAI dense + B
 | Component | Tab | Purpose |
 |---|---|---|
 | `AskAIPanel.jsx` | RAG Reference → Ask AI | Conversational chat grounded in financial news |
-| `RAGDashboardTab.jsx` | RAG Reference → RAG Performance | Evaluation metrics charts + cost tracking |
+| `RAGDashboardTab.jsx` | RAG Reference → RAG Performance | All metrics (precision, recall, MRR, faithfulness, answer_relevance, context_relevance, duration, cost/tokens) + per-query breakdown table |
 | `AskAIDrawer.jsx` | (Overlay variant) | Drawer-based chat (alternative) |
+
+> **Note:** RAG Performance tab is disabled while Ask AI chat is loading.
 
 ---
 
@@ -70,13 +73,23 @@ python -c "from dotenv import load_dotenv; load_dotenv(); from src.rag.ingest im
 ## Configuration
 
 All RAG config lives in `config/rag_pipeline.yaml`:
-- RSS feeds: MoneyControl, Economic Times, LiveMint, BSE
+- RSS feeds: MoneyControl, Economic Times, LiveMint, BSE + commodity feeds (MCX, gold, silver)
 - Chunking: 512 chars, 50 overlap
 - Embedding: text-embedding-3-small (1536 dims)
 - Retrieval: top-k=10, alpha=0.7 dense / 0.3 BM25
 - Generation: GPT-4o-mini, 500 max tokens, temp=0.3
 - Evaluation: 50 labelled samples in `data/rag_eval_set.json`
 - Orchestration: 6hr schedule, 3-failure circuit breaker
+
+---
+
+## Evaluation Data Seeding
+
+On first startup (when `rag_eval.db` is empty), the backend auto-seeds:
+- **20 evaluation run records** with realistic metric distributions
+- **400 per-query records** (20 per run) showing individual query performance
+- Replace-on-threshold pruning: when records exceed 50, oldest are removed to keep the DB lean
+- `GET /api/v4/rag/evaluation/latest` returns 200 with zero values when no data (never 404)
 
 ---
 
@@ -120,4 +133,3 @@ python-dotenv==1.0.1
 - `ragas` library not actually imported (uses simplified keyword-overlap proxy metrics)
 - MVP1a/MVP2 prerequisites not met (RAG operates independently)
 - Tasks 12-13 (integration/release gates) cannot fully pass without prerequisite MVPs
-- Evaluation metrics not yet populated (need to run evaluation after ingestion)
