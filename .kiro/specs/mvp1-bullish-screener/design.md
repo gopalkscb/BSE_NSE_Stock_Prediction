@@ -427,7 +427,7 @@ def rank_tickers(scored: list[ScoredTicker]) -> list[ScoredTicker]:
 ```jsx
 // State:
 //   tickers        (string)       — raw textarea/multiselect value
-//   results        (array)        — top-10 ScoredTicker objects from API
+//   results        (array)        — all ScoredTicker objects from API (sorted desc)
 //   failed         (array)        — [{ticker, reason}] objects from API
 //   loading        (bool)
 //   error          (string|null)
