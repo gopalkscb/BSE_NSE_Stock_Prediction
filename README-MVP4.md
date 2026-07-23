@@ -2,9 +2,9 @@
 
 > Multi-source live data, Pinecone RAG pipeline, hybrid retrieval, AI explanations, evaluation dashboard
 
-## Status: 📋 Planned
+## Status: 🟡 ~80-85% Implemented
 
-> **Note:** A Playwright E2E test spec for the RAG chat panel (`mvp4-rag-chat.spec.js`) has been written ahead of implementation as part of the MVP1b T5 Playwright effort. This test will pass once the MVP4 frontend code is built.
+> Backend RAG pipeline fully implemented. Frontend components built (AskAIDrawer, AskAIPanel, RAGDashboardTab). 8 backend test files + 11 E2E tests. Notable: `ragas` library not integrated (uses proxy metrics). Prerequisite chain violated (MVP1a/MVP2 not done).
 
 ## Spec Files
 - [Requirements](.kiro/specs/mvp4-live-rag/requirements.md)

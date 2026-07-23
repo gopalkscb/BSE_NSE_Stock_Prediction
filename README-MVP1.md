@@ -4,7 +4,7 @@
 
 ## Status: ✅ Deployed (~85%)
 
-Backend and frontend fully functional. 27 Python tests passing. Custom green-blue teal theme with DM Sans font. Playwright E2E tests written (119 tests across 15 files). Remaining ~15% is polish and minor fixes.
+Backend and frontend fully functional. 28 Python tests passing. Custom green-blue teal theme with DM Sans font. Playwright E2E tests written (119 tests across 15 files). Remaining ~15% is polish and minor fixes.
 
 ## Spec Files
 - [Requirements](.kiro/specs/mvp1-bullish-screener/requirements.md)
@@ -19,6 +19,7 @@ Backend and frontend fully functional. 27 Python tests passing. Custom green-blu
 - Fetches 1 year daily OHLCV via yfinance
 - Computes 5 indicators: RSI(14), MACD(12/26/9), Bollinger Bands(20/2σ), SMA-50/SMA-200, Volume Trend 5d/20d
 - Assigns Bullish Score (0–100) with Confidence Level (High/Medium/Low)
+- BSE ticker auto-resolution: attempts symbol → scrip code (`.BO` suffix) fallback if primary fetch fails
 - Returns **all** ranked results with 30-day projected price range (frontend paginates at 10/page)
 - Provides per-stock detail drawer with 90-day price chart (SMA overlays)
 - Observability tab: Live Metrics panel, Error Log panel, FAQ/Debug Guide panel (5 categories)
@@ -80,7 +81,7 @@ npm run dev
 ## Running Tests
 
 ```bash
-# Python (27 tests passing)
+# Python (28 tests passing)
 pytest tests/ -v
 pytest tests/ --cov=src --cov-report=term-missing
 
@@ -93,6 +94,16 @@ cd frontend && npx playwright test
 ## Deployment
 
 **Local development only.** No external network exposure, no auth required.
+
+---
+
+## Known Gaps (~15% remaining)
+
+- `@timed` decorator defined in `src/observability/timing.py` but not applied to any functions
+- `update_ticker_health()` defined in `src/observability/store.py` but never called from routes
+- Cache metrics (hit/miss) not emitted — cache works but produces no observability data
+- `structlog` listed in `requirements.txt` but standard `logging` module used throughout
+- `fetch_batch()` is sequential — `ThreadPoolExecutor` concurrent fetching deferred to MVP1b
 
 ---
 

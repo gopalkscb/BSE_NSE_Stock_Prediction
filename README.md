@@ -15,7 +15,9 @@ This project evolves across six MVPs, each building on the previous:
 | **MVP1b** | Test hardening (property + unit + integration + E2E) | 🟡 Partial (E2E done) | [README-MVP1b.md](README-MVP1b.md) |
 | **MVP2** | Deep-dive analysis (11 indicators, security, observability) | 📋 Planned | [README-MVP2.md](README-MVP2.md) |
 | **MVP3** | Native mobile app (Android + iOS) | 📋 Planned | [README-MVP3.md](README-MVP3.md) |
-| **MVP4** | Live data + RAG intelligence (Pinecone, OpenAI, hybrid retrieval) | 📋 Planned | [README-MVP4.md](README-MVP4.md) |
+| **MVP4** | Live data + RAG intelligence (Pinecone, OpenAI, hybrid retrieval) | 🟡 ~80% Implemented (ahead of schedule) | [README-MVP4.md](README-MVP4.md) |
+
+> **Note:** MVP4 was implemented ahead of the planned prerequisite chain (MVP1a/MVP2 not yet done). The RAG pipeline operates independently of live data providers.
 
 ---
 

@@ -1,6 +1,6 @@
 # Cross-MVP Audit Summary
 
-Last audited: 2026-07-23T09:00:00+05:30
+Last audited: 2026-07-23T10:05:00+05:30
 
 ---
 
@@ -13,7 +13,7 @@ Last audited: 2026-07-23T09:00:00+05:30
 | **MVP1b** | ✅ 7 requirements, 8 tasks, design doc | 🟡 T5 only (E2E) | ✅ PASS | 15 Playwright spec files written (~107 tests); rest pending |
 | **MVP2** | ✅ 13 requirements, 20 tasks, design doc | ⬜ 0% (specs only) | ✅ PASS | Ready after MVP1a |
 | **MVP3** | ✅ 11 requirements, 19 tasks, design doc | ⬜ 0% (specs only) | ✅ PASS | Ready after MVP2 + MVP1b |
-| **MVP4** | ✅ 12 requirements, 20 tasks, design doc | ⬜ 0% (specs only) | ✅ PASS | Ready after MVP2 |
+| **MVP4** | ✅ 12 requirements, 13 tasks, design doc | 🟡 ~80-85% Implemented | ⚠️ PREREQUISITE VIOLATED | Built ahead of schedule; MVP1a/MVP2 not done |
 
 ---
 
@@ -93,6 +93,53 @@ Findings from code-vs-spec audit on 2026-07-23:
 
 ---
 
+## Implementation vs Spec Deviations (MVP4)
+
+Findings from code-vs-spec audit on 2026-07-23:
+
+### Completion Status
+
+| Task | Status | Notes |
+|---|---|---|
+| T1: Pinecone setup | ✅ Complete | `src/rag/pinecone_client.py` with full CRUD |
+| T2: RSS ingestion + chunking | ✅ Complete | `src/rag/ingest.py` with feedparser + langchain |
+| T3: Embedding + BM25 sparse | ✅ Complete | OpenAI embedding + rank_bm25 in ingest.py |
+| T4: Pinecone upsert + API | ✅ Complete | Delete-and-replace; POST /ingest, GET /status |
+| T5: Hybrid retrieval | ✅ Complete | `src/rag/retriever.py` dense + sparse + RRF |
+| T6: AI explanations | ✅ Complete | `src/rag/generator.py` generate_explanation() |
+| T7: Q&A endpoint + frontend | ✅ Complete | POST /query + AskAIDrawer.jsx + AskAIPanel.jsx |
+| T8: Evaluation metrics | ⚠️ Partial | Proxy metrics only; `ragas` NOT imported |
+| T9: Eval storage + endpoints | ✅ Complete | `src/rag/eval_store.py` + API endpoints |
+| T10: RAG dashboard | ✅ Complete | `RAGDashboardTab.jsx` |
+| T11: Orchestration | ✅ Complete | APScheduler + circuit breaker |
+| T12: Integration gate | ❌ Not verified | Prerequisite MVPs don't exist |
+| T13: Release gate | ❌ Not verified | Cannot pass without MVP1a/MVP2 |
+
+### Key Deviations
+
+| Area | Spec Says | Code Does | Impact |
+|---|---|---|---|
+| Evaluation library | ragas library for metrics | Keyword-overlap proxy metrics | Medium — less rigorous eval |
+| Prerequisites | MVP1 + MVP1a + MVP2 required | Only MVP1 is done | High — data layer not production-ready |
+| API prefix | `/api/v4/rag/*` in spec | Actual routes may use different prefix | Low — check routes/rag.py |
+| App version | Should reflect MVP progression | Version "4.0.0" with MVP4 description | Low — cosmetic |
+
+### MVP4 Test Files (8 backend + 1 E2E)
+
+**Backend tests:**
+- `tests/test_pinecone_client.py`
+- `tests/test_rag_ingest.py`
+- `tests/test_rag_embedding.py`
+- `tests/test_rag_retriever.py`
+- `tests/test_rag_generator.py`
+- `tests/test_rag_evaluator.py`
+- `tests/test_rag_eval_storage.py`
+- `tests/test_rag_orchestration.py`
+
+**E2E:** `frontend/e2e/mvp4-rag-chat.spec.js` (11 tests)
+
+---
+
 ## Integrity Checks
 
 ### MVP1 — Bullish Stock Screener
@@ -145,10 +192,11 @@ Findings from code-vs-spec audit on 2026-07-23:
 | Check | Result | Notes |
 |---|---|---|
 | References MVP1a for data providers | ✅ PASS | Depends on MVP1a for live data layer |
-| RAG pipeline complete | ✅ PASS | Ingest → Chunk → Embed → Upsert → Retrieve → Generate → Evaluate |
+| RAG pipeline complete | ✅ IMPLEMENTED | Full pipeline built: pinecone_client, ingest, retriever, generator, evaluator, eval_store, orchestrator |
 | Pinecone cost control | ✅ PASS | Delete-and-replace strategy for free tier |
-| Evaluation metrics defined | ✅ PASS | precision@k, recall@k, MRR, faithfulness, relevance |
-| Prerequisite correct | ✅ PASS | "MVP1 + MVP1a + MVP2 complete" |
+| Evaluation metrics defined | ⚠️ PARTIAL | ragas library NOT used despite being in requirements.txt; uses simplified proxy metrics |
+| Prerequisite correct | ⚠️ VIOLATED | "MVP1 + MVP1a + MVP2 complete" required; only MVP1 is done |
+| Implementation status | 🟡 ~80-85% | Tasks 1-11 implemented; Tasks 12-13 (gates) cannot pass without prerequisites |
 
 ---
 
