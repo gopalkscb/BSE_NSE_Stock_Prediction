@@ -7,6 +7,9 @@ ingestion:
     - https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms
     - https://www.livemint.com/rss/markets
     - https://www.bseindia.com/markets/MarketInfo/RssFeeds.aspx
+    # Commodity feeds (gold, silver, metals)
+    - https://www.moneycontrol.com/rss/commodities.xml
+    - https://economictimes.indiatimes.com/markets/commodities/rssfeeds/1808152121.cms
   chunk_size: 512
   chunk_overlap: 50
   max_articles_per_feed: 20

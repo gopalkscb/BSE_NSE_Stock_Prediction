@@ -21,10 +21,13 @@ async def lifespan(app: FastAPI):
     """Initialize databases on startup, start RAG scheduler."""
     await init_db()
     
-    # Initialize RAG evaluation DB
+    # Initialize RAG evaluation DB and seed if empty
     try:
         from src.rag.eval_store import init_eval_db
         await init_eval_db()
+        # Seed with baseline data if no evaluations exist
+        from src.rag.seed_eval import seed_evaluations
+        seed_evaluations()
     except Exception:
         pass  # Non-critical if RAG deps not installed
     

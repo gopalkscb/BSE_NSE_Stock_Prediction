@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Drawer,
+  Container,
   Header,
   SpaceBetween,
   Box,
@@ -9,6 +9,7 @@ import {
   StatusIndicator,
   Table,
   Alert,
+  Button,
 } from '@cloudscape-design/components';
 import {
   LineChart,
@@ -45,7 +46,10 @@ function signalIndicator(label) {
 }
 
 /**
- * StockDetailDrawer - Shows full indicator breakdown and 90-day price chart.
+ * StockDetailSection — Shows full indicator breakdown and 90-day price chart
+ * as an inline section (Container) below the results table.
+ * NOT a Drawer overlay — all content visible on the same page without truncation.
+ *
  * @param {{ ticker: object|null, onClose: () => void }} props
  */
 export default function StockDetailDrawer({ ticker, onClose }) {
@@ -67,12 +71,18 @@ export default function StockDetailDrawer({ ticker, onClose }) {
   ];
 
   return (
-    <Drawer
-      header={<Header variant="h2">{ticker.ticker} — Detail</Header>}
-      visible={true}
-      onDismiss={onClose}
-      size="large"
-      data-testid="stock-detail-drawer"
+    <Container
+      header={
+        <Header
+          variant="h2"
+          actions={
+            <Button onClick={onClose} variant="icon" iconName="close" ariaLabel="Close detail section" />
+          }
+        >
+          {ticker.ticker} — Full Indicator Breakdown
+        </Header>
+      }
+      data-testid="stock-detail-section"
     >
       <SpaceBetween size="l">
         {/* Summary */}
@@ -107,12 +117,12 @@ export default function StockDetailDrawer({ ticker, onClose }) {
           data-testid="indicator-table"
         />
 
-        {/* 90-day price chart */}
+        {/* 90-day price chart — full width, no height constraint */}
         {chartData.length > 0 && (
           <Box>
             <Header variant="h3">90-Day Price Chart</Header>
-            <div data-testid="price-chart" style={{ width: '100%', height: 300 }}>
-              <ResponsiveContainer>
+            <div data-testid="price-chart" style={{ width: '100%', height: 400 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} />
@@ -134,6 +144,6 @@ export default function StockDetailDrawer({ ticker, onClose }) {
           Data as of the most recent trading day available from yfinance.
         </Alert>
       </SpaceBetween>
-    </Drawer>
+    </Container>
   );
 }

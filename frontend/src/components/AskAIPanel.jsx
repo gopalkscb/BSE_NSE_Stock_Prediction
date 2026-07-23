@@ -17,7 +17,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
  * AskAIPanel — Inline conversational Q&A for RAG Reference tab.
  * Same logic as AskAIDrawer but rendered as a Container (not an overlay).
  */
-export default function AskAIPanel() {
+export default function AskAIPanel({ onLoadingChange }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,6 +37,7 @@ export default function AskAIPanel() {
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setLoading(true);
+    if (onLoadingChange) onLoadingChange(true);
 
     try {
       const history = updatedMessages.slice(-10).map((m) => ({
@@ -65,6 +66,7 @@ export default function AskAIPanel() {
       setMessages([...updatedMessages, errorMsg]);
     } finally {
       setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
     }
   }
 

@@ -18,6 +18,17 @@
 | Unit testing | `pytest` | 8.2.0 |
 | Async test support | `pytest-asyncio` | 0.23.6 |
 | Property-based tests | `hypothesis` | 6.100.1 |
+| Structured logging | `structlog` | 24.1.0 |
+| SQLite async | `aiosqlite` | 0.20.0 |
+| Env file loading | `python-dotenv` | 1.0.1 |
+| Vector database | `pinecone-client` | 3.2.2 |
+| LLM client | `openai` | >=2.0.0 |
+| Text chunking | `langchain-text-splitters` | 0.2.0 |
+| BM25 ranking | `rank-bm25` | 0.2.2 |
+| RAG evaluation | `ragas` | 0.1.10 |
+| RSS parsing | `feedparser` | 6.0.11 |
+| Task scheduling | `apscheduler` | 3.10.4 |
+| YAML config | `pyyaml` | 6.0.1 |
 
 ## Frontend Libraries (in `frontend/package.json`)
 
@@ -44,7 +55,7 @@
 ## Testing Strategy
 
 ### Current state (as of 2026-07-23)
-- **Python**: 8 test files (smoke tests, 1–3 per module) — all GREEN
+- **Python**: 17 test files (9 MVP1 smoke tests + 8 MVP4 RAG tests) — all compile clean
 - **Playwright E2E**: 15 spec files with ~107 tests written (covers MVP1, MVP1a, MVP2, MVP4 scenarios) — `@playwright/test` ^1.61.1 installed
 - **Vitest / React Testing Library**: NOT yet installed — planned for MVP1b
 

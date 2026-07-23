@@ -175,14 +175,20 @@ async def update_ticker_health(
         await db.commit()
 
 
-async def get_metrics(limit: int = 100) -> list[dict]:
-    """Return most recent metric events, newest first."""
+async def get_metrics(limit: int = 100, name: str | None = None, offset: int = 0) -> list[dict]:
+    """Return most recent metric events, newest first. Optionally filter by metric_name."""
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
-        cursor = await db.execute(
-            "SELECT id, timestamp, metric_name, metric_value, labels FROM metrics ORDER BY id DESC LIMIT ?",
-            (limit,),
-        )
+        if name:
+            cursor = await db.execute(
+                "SELECT id, timestamp, metric_name, metric_value, labels FROM metrics WHERE metric_name = ? ORDER BY id DESC LIMIT ? OFFSET ?",
+                (name, limit, offset),
+            )
+        else:
+            cursor = await db.execute(
+                "SELECT id, timestamp, metric_name, metric_value, labels FROM metrics ORDER BY id DESC LIMIT ? OFFSET ?",
+                (limit, offset),
+            )
         rows = await cursor.fetchall()
         return [
             {

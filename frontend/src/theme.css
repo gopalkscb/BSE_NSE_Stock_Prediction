@@ -76,6 +76,21 @@ body {
   color: var(--theme-text-primary);
 }
 
+/* Prevent Cloudscape AppLayout from constraining content height */
+[class*="awsui_layout"],
+[class*="awsui_content"],
+[class*="awsui_main"] {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Ensure the content area expands to fit all data */
+[class*="awsui_content-wrapper"] {
+  max-height: none !important;
+  overflow: visible !important;
+  height: auto !important;
+}
+
 * {
   font-family: inherit;
 }
@@ -225,7 +240,6 @@ body {
 /* Table styling */
 [class*="awsui_table"] {
   border-radius: var(--radius-md) !important;
-  overflow: hidden !important;
 }
 
 [class*="awsui_table"] [class*="awsui_header-cell"] {
@@ -615,4 +629,69 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(153, 246, 228, 0.3);
+}
+
+
+/* ── Metrics Grid — Observability Dashboard ───────────────── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-md);
+}
+
+.metric-card {
+  background: var(--theme-gradient-card);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  text-align: center;
+  transition: all var(--transition-normal);
+}
+
+.metric-card--clickable {
+  cursor: pointer;
+}
+
+.metric-card--clickable:hover {
+  border-color: var(--theme-primary);
+  box-shadow: var(--theme-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.metric-card--clickable:active {
+  transform: translateY(0);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.metric-card__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--theme-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: var(--space-xs);
+}
+
+.metric-card__value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--theme-text-primary);
+  line-height: 1.2;
+}
+
+.metric-card__value--info { color: var(--theme-secondary); }
+.metric-card__value--success { color: var(--theme-success); }
+.metric-card__value--error { color: var(--theme-error); }
+.metric-card__value--warning { color: var(--theme-warning); }
+
+.metric-card__hint {
+  font-size: 0.7rem;
+  color: var(--theme-text-muted);
+  margin-top: var(--space-xs);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.metric-card--clickable:hover .metric-card__hint {
+  opacity: 1;
 }

@@ -86,20 +86,23 @@ export default function App() {
 /**
  * RAGReferencePage — Sub-tabs for RAG-powered reference data:
  *   - Ask AI: conversational Q&A grounded in financial news
- *   - RAG Performance: evaluation metrics dashboard
+ *   - RAG Performance: evaluation metrics dashboard (disabled while chat in progress)
  */
 function RAGReferencePage() {
+  const [ragChatLoading, setRagChatLoading] = useState(false);
+
   return (
     <Tabs
       tabs={[
         {
           id: 'ask-ai',
           label: '🤖 Ask AI',
-          content: <AskAIPanel />,
+          content: <AskAIPanel onLoadingChange={setRagChatLoading} />,
         },
         {
           id: 'rag-dashboard',
-          label: '📈 RAG Performance',
+          label: ragChatLoading ? '📈 RAG Performance (waiting...)' : '📈 RAG Performance',
+          disabled: ragChatLoading,
           content: <RAGDashboardTab />,
         },
       ]}

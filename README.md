@@ -15,7 +15,7 @@ This project evolves across six MVPs, each building on the previous:
 | **MVP1b** | Test hardening (property + unit + integration + E2E) | 🟡 Partial (E2E done) | [README-MVP1b.md](README-MVP1b.md) |
 | **MVP2** | Deep-dive analysis (11 indicators, security, observability) | 📋 Planned | [README-MVP2.md](README-MVP2.md) |
 | **MVP3** | Native mobile app (Android + iOS) | 📋 Planned | [README-MVP3.md](README-MVP3.md) |
-| **MVP4** | Live data + RAG intelligence (Pinecone, OpenAI, hybrid retrieval) | 🟡 ~80% Implemented (ahead of schedule) | [README-MVP4.md](README-MVP4.md) |
+| **MVP4** | Live data + RAG intelligence (Pinecone, OpenAI, hybrid retrieval) | 🟡 ~95% Implemented | [README-MVP4.md](README-MVP4.md) |
 
 > **Note:** MVP4 was implemented ahead of the planned prerequisite chain (MVP1a/MVP2 not yet done). The RAG pipeline operates independently of live data providers.
 
@@ -104,6 +104,18 @@ cd frontend && npm install && npm run dev
 # → http://localhost:5173
 ```
 
+### RAG Pipeline (MVP4)
+
+Requires `OPENAI_API_KEY` and `PINECONE_API_KEY` in `.env`:
+
+```bash
+# One-time: populate Pinecone with financial news
+python -c "from dotenv import load_dotenv; load_dotenv(); from src.rag.ingest import ArticleIngester; print(ArticleIngester().run_pipeline())"
+
+# Or via API (backend must be running)
+curl -X POST http://localhost:8000/api/v4/rag/ingest -H "X-API-Key: YOUR_ADMIN_KEY"
+```
+
 ---
 
 ## Security Baseline
@@ -121,7 +133,7 @@ See [security.md](.kiro/steering/security.md) for the full OWASP control mapping
 ## Running Tests
 
 ```bash
-# Python (all MVPs)
+# Python (all MVPs — 17 test files: 9 MVP1 + 8 MVP4)
 pytest tests/ -v
 pytest tests/ --cov=src --cov-report=term-missing
 

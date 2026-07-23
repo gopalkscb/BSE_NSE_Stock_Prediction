@@ -25,8 +25,6 @@ import {
 } from 'recharts';
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
 /**
  * RAGDashboardTab — RAG evaluation metrics dashboard.
  * Shows precision/recall/MRR trends, faithfulness/relevance bars,
@@ -36,26 +34,31 @@ export default function RAGDashboardTab() {
   const [history, setHistory] = useState([]);
   const [latest, setLatest] = useState(null);
   const [degradation, setDegradation] = useState(null);
+  const [queryMetrics, setQueryMetrics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   async function loadData() {
     setLoading(true);
     try {
-      const apiKey = sessionStorage.getItem('admin_api_key') || '';
-      const headers = { 'X-API-Key': apiKey };
-
-      const [historyRes, latestRes] = await Promise.all([
-        axios.get(`${API_BASE}/api/v4/rag/evaluation/history`, { headers }),
-        axios.get(`${API_BASE}/api/v4/rag/evaluation/latest`, { headers }),
+      const [historyRes, latestRes, queriesRes] = await Promise.all([
+        axios.get(`/api/v4/rag/evaluation/history`),
+        axios.get(`/api/v4/rag/evaluation/latest`),
+        axios.get(`/api/v4/rag/evaluation/queries`),
       ]);
 
       setHistory(historyRes.data.results || []);
       setDegradation(historyRes.data.degradation || null);
       setLatest(latestRes.data);
+      setQueryMetrics(queriesRes.data || []);
       setError('');
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Failed to load evaluation data');
+      if (err.response?.status === 404) {
+        // No evaluations yet — not an error
+        setError('');
+      } else {
+        setError(err.response?.data?.detail || err.message || 'Failed to load evaluation data');
+      }
     } finally {
       setLoading(false);
     }
@@ -126,6 +129,26 @@ export default function RAGDashboardTab() {
               <Box variant="h2">{(latest.answer_faithfulness * 100).toFixed(1)}%</Box>
             </Box>
           </ColumnLayout>
+          <Box margin={{ top: 'm' }}>
+            <ColumnLayout columns={4} variant="text-grid">
+              <Box data-testid="metric-answer-relevance">
+                <Box variant="awsui-key-label">Answer Relevance</Box>
+                <Box variant="h2">{(latest.answer_relevance * 100).toFixed(1)}%</Box>
+              </Box>
+              <Box data-testid="metric-context-relevance">
+                <Box variant="awsui-key-label">Context Relevance</Box>
+                <Box variant="h2">{(latest.context_relevance * 100).toFixed(1)}%</Box>
+              </Box>
+              <Box data-testid="metric-duration">
+                <Box variant="awsui-key-label">Duration</Box>
+                <Box variant="h2">{latest.duration_seconds?.toFixed(1) || '0'}s</Box>
+              </Box>
+              <Box data-testid="metric-cost-summary">
+                <Box variant="awsui-key-label">Cost / Tokens</Box>
+                <Box variant="h2">${latest.cost_usd?.toFixed(4) || '0'} · {latest.tokens_consumed?.toLocaleString() || 0}</Box>
+              </Box>
+            </ColumnLayout>
+          </Box>
         </Container>
       )}
 
@@ -187,6 +210,33 @@ export default function RAGDashboardTab() {
             </Box>
           </ColumnLayout>
         </Container>
+      )}
+
+      {/* Per-Query Metrics Breakdown */}
+      {queryMetrics.length > 0 && (
+        <Table
+          header={
+            <Header variant="h3" counter={`(${queryMetrics.length} queries)`}
+                    description="Per-query performance from the latest evaluation run">
+              Query-wise Metric Breakdown
+            </Header>
+          }
+          columnDefinitions={[
+            { id: 'query', header: 'Query', cell: (item) => item.query, width: 280 },
+            { id: 'precision', header: 'P@K', cell: (item) => `${(item.precision_at_k * 100).toFixed(0)}%` },
+            { id: 'recall', header: 'R@K', cell: (item) => `${(item.recall_at_k * 100).toFixed(0)}%` },
+            { id: 'mrr', header: 'MRR', cell: (item) => item.mrr.toFixed(3) },
+            { id: 'faith', header: 'Faith.', cell: (item) => `${(item.faithfulness * 100).toFixed(0)}%` },
+            { id: 'ans_rel', header: 'Ans.Rel', cell: (item) => `${(item.answer_relevance * 100).toFixed(0)}%` },
+            { id: 'ctx_rel', header: 'Ctx.Rel', cell: (item) => `${(item.context_relevance * 100).toFixed(0)}%` },
+            { id: 'retrieved', header: 'Chunks', cell: (item) => item.retrieved_count },
+            { id: 'tokens', header: 'Tokens', cell: (item) => item.tokens_used },
+          ]}
+          items={queryMetrics}
+          stripedRows
+          stickyHeader
+          data-testid="query-metrics-table"
+        />
       )}
 
       {/* Evaluation History Table */}

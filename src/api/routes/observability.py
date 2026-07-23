@@ -18,11 +18,15 @@ router = APIRouter(prefix="/api/v1/observability")
     "/metrics",
     response_model=MetricsResponse,
     summary="Get observability metrics",
-    description="Returns aggregated metric summary and recent metric events.",
+    description="Returns aggregated metric summary and recent metric events. Optionally filter by metric name.",
 )
-async def observability_metrics() -> MetricsResponse:
+async def observability_metrics(
+    name: str | None = Query(None, description="Filter by metric name"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> MetricsResponse:
     summary_data = await get_metric_summary()
-    recent_data = await get_metrics(limit=50)
+    recent_data = await get_metrics(limit=limit, name=name, offset=offset)
 
     summary = MetricSummary(**summary_data)
     recent = [MetricEvent(**m) for m in recent_data]

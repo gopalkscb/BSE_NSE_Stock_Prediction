@@ -8,15 +8,12 @@ import {
   Alert,
   Flashbar,
   Header,
-  Pagination,
   TextFilter,
   Popover,
 } from '@cloudscape-design/components';
 import TickerInputForm from '../components/TickerInputForm';
-import StockDetailDrawer from '../components/StockDetailDrawer';
+import StockDetailSection from '../components/StockDetailDrawer';
 import { analyzeStocks } from '../api/stockApi';
-
-const PAGE_SIZE = 10;
 
 /** Gradient pill for the main bullish score */
 function ScorePill({ score }) {
@@ -55,7 +52,8 @@ const LEGENDS = {
 };
 
 /**
- * AnalysisPage — Main analysis view with ticker input, results table, and detail drawer.
+ * AnalysisPage — Main analysis view with ticker input, full results table (no pagination),
+ * and inline detail section below the table (no overlay drawer).
  */
 export default function AnalysisPage({ onLoadingChange }) {
   const [results, setResults] = useState([]);
@@ -63,7 +61,6 @@ export default function AnalysisPage({ onLoadingChange }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedTicker, setSelectedTicker] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [filterText, setFilterText] = useState('');
 
   async function handleAnalyze(tickers) {
@@ -72,7 +69,6 @@ export default function AnalysisPage({ onLoadingChange }) {
     setError('');
     setFailed([]);
     setSelectedTicker(null);
-    setCurrentPage(1);
     setFilterText('');
     try {
       const data = await analyzeStocks(tickers);
@@ -98,12 +94,6 @@ export default function AnalysisPage({ onLoadingChange }) {
 
   const filteredResults = results.filter(
     (item) => !filterText || item.ticker.toLowerCase().includes(filterText.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredResults.length / PAGE_SIZE);
-  const paginatedResults = filteredResults.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
   );
 
   const columnDefinitions = [
@@ -179,7 +169,7 @@ export default function AnalysisPage({ onLoadingChange }) {
 
   return (
     <SpaceBetween size="l">
-      <TickerInputForm onSubmit={handleAnalyze} loading={loading} />
+      <TickerInputForm onSubmit={handleAnalyze} onClear={() => { setResults([]); setFailed([]); setError(''); setSelectedTicker(null); setFilterText(''); }} loading={loading} />
 
       {error && (
         <Flashbar
@@ -216,13 +206,13 @@ export default function AnalysisPage({ onLoadingChange }) {
               <Header
                 variant="h2"
                 counter={`(${filteredResults.length})`}
-                description="Click any ticker for full indicator breakdown"
+                description="Click any ticker for full indicator breakdown below"
               >
                 Bullish Stock Rankings
               </Header>
             }
             columnDefinitions={columnDefinitions}
-            items={paginatedResults}
+            items={filteredResults}
             sortingDisabled
             stickyHeader
             stripedRows
@@ -233,17 +223,8 @@ export default function AnalysisPage({ onLoadingChange }) {
                 filteringPlaceholder="Filter by ticker..."
                 onChange={({ detail }) => {
                   setFilterText(detail.filteringText);
-                  setCurrentPage(1);
                 }}
                 data-testid="results-filter"
-              />
-            }
-            pagination={
-              <Pagination
-                currentPageIndex={currentPage}
-                pagesCount={totalPages}
-                onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
-                data-testid="results-pagination"
               />
             }
             empty={
@@ -258,8 +239,9 @@ export default function AnalysisPage({ onLoadingChange }) {
         </>
       )}
 
+      {/* Inline detail section — displayed below the table, not as an overlay */}
       {selectedTicker && (
-        <StockDetailDrawer
+        <StockDetailSection
           ticker={selectedTicker}
           onClose={() => setSelectedTicker(null)}
         />

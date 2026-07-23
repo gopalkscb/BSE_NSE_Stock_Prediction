@@ -188,25 +188,63 @@ class EvaluationHistoryResponse(BaseModel):
 
 @router.get('/evaluation/latest', response_model=EvaluationResponse,
             summary='Get latest RAG evaluation',
-            description='Returns the most recent evaluation scores.')
-async def evaluation_latest(x_api_key: str = Header(None)):
-    _verify_api_key(x_api_key)
-    from src.rag.eval_store import get_latest_evaluation
+            description='Returns the most recent evaluation scores. Returns zeroed metrics if no evaluation has run yet.')
+async def evaluation_latest():
+    from src.rag.eval_store import get_latest_evaluation, init_eval_db
+    await init_eval_db()
     result = await get_latest_evaluation()
     if not result:
-        raise HTTPException(status_code=404, detail='No evaluation results found')
+        # Return default empty evaluation instead of 404
+        return EvaluationResponse(
+            timestamp=None,
+            precision_at_k=0.0,
+            recall_at_k=0.0,
+            mrr=0.0,
+            context_relevance=0.0,
+            answer_faithfulness=0.0,
+            answer_relevance=0.0,
+            total_queries=0,
+            duration_seconds=0.0,
+            tokens_consumed=0,
+            cost_usd=0.0,
+        )
     return EvaluationResponse(**result)
 
 
 @router.get('/evaluation/history', response_model=EvaluationHistoryResponse,
             summary='Get RAG evaluation history',
             description='Returns evaluation scores over time.')
-async def evaluation_history(limit: int = 50, x_api_key: str = Header(None)):
-    _verify_api_key(x_api_key)
-    from src.rag.eval_store import get_evaluation_history, get_degradation_check
+async def evaluation_history(limit: int = 50):
+    from src.rag.eval_store import get_evaluation_history, get_degradation_check, init_eval_db
+    await init_eval_db()
     results = await get_evaluation_history(limit)
     degradation = await get_degradation_check()
     return EvaluationHistoryResponse(
         results=[EvaluationResponse(**r) for r in results],
         degradation=degradation,
     )
+
+
+class QueryMetricResponse(BaseModel):
+    """Per-query evaluation metric."""
+    id: Optional[int] = None
+    eval_id: Optional[int] = None
+    query: str = ''
+    precision_at_k: float = 0.0
+    recall_at_k: float = 0.0
+    mrr: float = 0.0
+    faithfulness: float = 0.0
+    answer_relevance: float = 0.0
+    context_relevance: float = 0.0
+    retrieved_count: int = 0
+    tokens_used: int = 0
+
+
+@router.get('/evaluation/queries', response_model=list[QueryMetricResponse],
+            summary='Get per-query evaluation breakdown',
+            description='Returns per-query metrics for the latest (or specified) evaluation run.')
+async def evaluation_queries(eval_id: Optional[int] = None):
+    from src.rag.eval_store import get_query_results, init_eval_db
+    await init_eval_db()
+    results = await get_query_results(eval_id)
+    return [QueryMetricResponse(**r) for r in results]

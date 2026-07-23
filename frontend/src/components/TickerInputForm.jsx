@@ -30,7 +30,7 @@ const PRESET_OPTIONS = [
 /**
  * TickerInputForm - Accepts tickers via preset dropdown or manual input, validates, and submits.
  */
-export default function TickerInputForm({ onSubmit, loading }) {
+export default function TickerInputForm({ onSubmit, onClear, loading }) {
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState('');
   const [selectedPreset, setSelectedPreset] = useState(null);
@@ -110,7 +110,7 @@ export default function TickerInputForm({ onSubmit, loading }) {
               </Button>
               <Button
                 variant="normal"
-                onClick={() => { setInputValue(''); setSelectedPreset(null); setError(''); }}
+                onClick={() => { setInputValue(''); setSelectedPreset(null); setError(''); if (onClear) onClear(); }}
                 disabled={loading}
                 data-testid="clear-button"
               >

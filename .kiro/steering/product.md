@@ -14,11 +14,15 @@ The Bullish Stock Predictor is a full-stack application for Indian equity market
 
 ## Key Features
 
-- **Top-ranked results table**: Ticker, Bullish Score, Confidence Badge, RSI/MACD/BB/MA/Volume signals, 30-day price range (paginated at 10 per page)
+- **5-tab UI**: Analysis (bulk scoring), Live Data (single ticker lookup), RAG Reference (AI Q&A + evaluation), Observability, FAQ
+- **Top-ranked results table**: Ticker, Bullish Score (gradient pill), Confidence Badge, RSI/MACD/BB/MA/Volume sub-score badges, 30-day price range (paginated at 10 per page, Cloudscape stripedRows)
+- **Live Data tab**: Single ticker lookup with full indicator breakdown and signal status
+- **RAG Reference tab**: Conversational AI Q&A grounded in financial news (Pinecone + OpenAI hybrid retrieval) + RAG evaluation metrics dashboard
 - **Per-stock detail drawer**: Full indicator breakdown with sub-scores, signal explanations, and a 90-day price chart (Recharts line chart with SMA-50 and SMA-200 overlays)
 - **Swagger UI** (`/docs`) and **ReDoc** (`/redoc`) for interactive API exploration
 - **In-memory session cache** — scored tickers are cached per server session for instant detail lookups
 - **Partial failure handling** — if some tickers fail to fetch, successful ones are still ranked and returned
+- **Font**: Calibri (system font stack, no Google Fonts dependency)
 
 ## Scoring Model (rule-based, no ML)
 

@@ -49,6 +49,19 @@ export const NSE_TOP_100 = [
   "FEDERALBNK.NS", "MRF.NS", "COFORGE.NS", "NAUKRI.NS", "AUROPHARMA.NS",
 ];
 
+export const COMMODITY_ETFS = [
+  "GOLDBEES.NS",     // Nippon India Gold BeES
+  "SILVERBEES.NS",   // Nippon India Silver ETF
+  "GOLDCASE.NS",     // ICICI Pru Gold ETF
+  "CPSEETF.NS",      // CPSE ETF
+  "NIFTYBEES.NS",    // Nippon Nifty 50 ETF
+  "BANKBEES.NS",     // Nippon Bank Nifty ETF
+  "JUNIORBEES.NS",   // Nippon Junior Nifty ETF
+  "SETFNIF50.NS",    // SBI Nifty 50 ETF
+  "ICICIGOLD.NS",    // ICICI Pru Gold iWIN ETF
+  "SILVERETF.NS",    // ICICI Pru Silver ETF
+];
+
 /** Preset groups for the dropdown selector */
 export const TICKER_PRESETS = [
   {
@@ -56,6 +69,12 @@ export const TICKER_PRESETS = [
     value: "all_combined",
     description: "All 200 validated stocks from both exchanges",
     tickers: [...BSE_TOP_100, ...NSE_TOP_100],
+  },
+  {
+    label: "Commodity & Index ETFs (10)",
+    value: "commodity_etfs",
+    description: "Gold, Silver, and Index ETFs on NSE",
+    tickers: COMMODITY_ETFS,
   },
   {
     label: "All BSE Stocks (100)",

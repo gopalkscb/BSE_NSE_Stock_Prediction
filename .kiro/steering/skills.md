@@ -189,6 +189,8 @@ description: MVP4 Pinecone RAG pipeline with hybrid retrieval (OpenAI dense + BM
 
 # MVP4 — Live Data Streaming + RAG-Powered Intelligence
 
+## Status: 🟡 ~95% Implemented
+
 ## Spec Location
 - Requirements: `.kiro/specs/mvp4-live-rag/requirements.md`
 - Design: `.kiro/specs/mvp4-live-rag/design.md`
@@ -196,19 +198,36 @@ description: MVP4 Pinecone RAG pipeline with hybrid retrieval (OpenAI dense + BM
 - Security Reference: `.kiro/steering/security.md`
 
 ## Scope
-- Depends on MVP1a for live data layer
+- Depends on MVP1a for live data layer (operates independently for now)
 - Pinecone vector store (serverless, delete-and-replace for cost control)
 - RAG ingestion pipeline: RSS feeds → chunk → embed (OpenAI) → BM25 sparse → upsert
 - Hybrid retrieval: dense (OpenAI) + sparse (BM25) + Reciprocal Rank Fusion
 - AI signal explanations (GPT-4o-mini, grounded in retrieved news)
-- Conversational ticker Q&A chat panel
-- RAG evaluation: precision@k, recall@k, MRR, faithfulness, relevance (ragas)
-- RAG evaluation dashboard with cost tracking
-- Pipeline orchestration with circuit breaker
+- Conversational ticker Q&A chat panel (AskAIPanel.jsx)
+- RAG evaluation: precision@k, recall@k, MRR, faithfulness, relevance (proxy metrics)
+- RAG evaluation dashboard with cost tracking (RAGDashboardTab.jsx)
+- Pipeline orchestration with APScheduler + circuit breaker
+
+## Key Files
+- `src/rag/pinecone_client.py` — Pinecone CRUD
+- `src/rag/ingest.py` — Full ingestion pipeline (RSS → chunk → embed → upsert)
+- `src/rag/retriever.py` — HybridRetriever (dense + sparse + RRF)
+- `src/rag/generator.py` — RAGGenerator (explanations + Q&A)
+- `src/rag/evaluator.py` — Evaluation metrics
+- `src/rag/eval_store.py` — SQLite evaluation storage
+- `src/rag/orchestrator.py` — APScheduler + circuit breaker
+- `src/api/routes/rag.py` — All v4 API endpoints
+- `config/rag_pipeline.yaml` — Pipeline configuration
+- `data/rag_eval_set.json` — 50 labelled evaluation samples
 
 ## Key Commands
 ```bash
-pytest tests/ -v                                    # All tests
-python -m src.rag.ingest                           # Manual ingest trigger
-python -m src.rag.evaluator                        # Manual evaluation run
+uvicorn src.api.main:app --reload                  # Backend (auto-loads .env)
+pytest tests/ -v                                    # All tests (MVP1 + MVP4)
+python -c "from dotenv import load_dotenv; load_dotenv(); from src.rag.ingest import ArticleIngester; print(ArticleIngester().run_pipeline())"  # Manual ingest
 ```
+
+## Environment Variables Required
+- `OPENAI_API_KEY` — OpenAI embeddings + generation
+- `PINECONE_API_KEY` — Pinecone vector store
+- `ADMIN_API_KEY` — Protected endpoints (≥32 chars)

@@ -13,7 +13,7 @@ Last audited: 2026-07-23T10:05:00+05:30
 | **MVP1b** | ✅ 7 requirements, 8 tasks, design doc | 🟡 T5 only (E2E) | ✅ PASS | 15 Playwright spec files written (~107 tests); rest pending |
 | **MVP2** | ✅ 13 requirements, 20 tasks, design doc | ⬜ 0% (specs only) | ✅ PASS | Ready after MVP1a |
 | **MVP3** | ✅ 11 requirements, 19 tasks, design doc | ⬜ 0% (specs only) | ✅ PASS | Ready after MVP2 + MVP1b |
-| **MVP4** | ✅ 12 requirements, 13 tasks, design doc | 🟡 ~80-85% Implemented | ⚠️ PREREQUISITE VIOLATED | Built ahead of schedule; MVP1a/MVP2 not done |
+| **MVP4** | ✅ 12 requirements, 13 tasks, design doc | 🟡 ~95% Implemented | ⚠️ PREREQUISITE VIOLATED | Built ahead of schedule; MVP1a/MVP2 not done |
 
 ---
 
@@ -196,7 +196,7 @@ Findings from code-vs-spec audit on 2026-07-23:
 | Pinecone cost control | ✅ PASS | Delete-and-replace strategy for free tier |
 | Evaluation metrics defined | ⚠️ PARTIAL | ragas library NOT used despite being in requirements.txt; uses simplified proxy metrics |
 | Prerequisite correct | ⚠️ VIOLATED | "MVP1 + MVP1a + MVP2 complete" required; only MVP1 is done |
-| Implementation status | 🟡 ~80-85% | Tasks 1-11 implemented; Tasks 12-13 (gates) cannot pass without prerequisites |
+| Implementation status | 🟡 ~95% | Tasks 1-11 implemented; Tasks 12-13 (gates) cannot pass without prerequisites |
 
 ---
 

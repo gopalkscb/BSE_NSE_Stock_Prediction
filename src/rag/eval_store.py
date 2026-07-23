@@ -30,12 +30,35 @@ async def init_eval_db():
                 cost_usd REAL DEFAULT 0.0
             )
         ''')
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS evaluation_query_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                eval_id INTEGER NOT NULL,
+                query TEXT NOT NULL,
+                precision_at_k REAL NOT NULL,
+                recall_at_k REAL NOT NULL,
+                mrr REAL NOT NULL,
+                faithfulness REAL NOT NULL,
+                answer_relevance REAL NOT NULL,
+                context_relevance REAL NOT NULL,
+                retrieved_count INTEGER DEFAULT 0,
+                tokens_used INTEGER DEFAULT 0,
+                FOREIGN KEY (eval_id) REFERENCES evaluation_results(id)
+            )
+        ''')
         await db.commit()
     logger.info('eval_db_initialized', path=DB_PATH)
 
 
 async def store_evaluation(result) -> int:
-    """Store an evaluation result. Returns the row ID."""
+    """
+    Store an evaluation result. Returns the row ID.
+    
+    If the total record count exceeds REPLACE_THRESHOLD (50), the oldest
+    seed records are pruned to keep only the most recent 50 real evaluations.
+    """
+    REPLACE_THRESHOLD = 50
+
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute(
             '''INSERT INTO evaluation_results 
@@ -58,8 +81,23 @@ async def store_evaluation(result) -> int:
             ),
         )
         await db.commit()
-        logger.info('evaluation_stored', id=cursor.lastrowid)
-        return cursor.lastrowid
+        row_id = cursor.lastrowid
+
+        # Prune old records if threshold exceeded (keeps latest REPLACE_THRESHOLD)
+        count_cursor = await db.execute('SELECT COUNT(*) FROM evaluation_results')
+        total = (await count_cursor.fetchone())[0]
+        if total > REPLACE_THRESHOLD:
+            await db.execute(
+                '''DELETE FROM evaluation_results WHERE id NOT IN (
+                    SELECT id FROM evaluation_results ORDER BY id DESC LIMIT ?
+                )''',
+                (REPLACE_THRESHOLD,),
+            )
+            await db.commit()
+            logger.info('eval_records_pruned', kept=REPLACE_THRESHOLD, removed=total - REPLACE_THRESHOLD)
+
+        logger.info('evaluation_stored', id=row_id)
+        return row_id
 
 
 async def get_latest_evaluation() -> dict | None:
@@ -127,3 +165,29 @@ async def get_degradation_check() -> dict | None:
                 'latest_timestamp': latest.get('timestamp'),
             }
         return None
+
+
+
+async def get_query_results(eval_id: int = None) -> list[dict]:
+    """
+    Get per-query evaluation breakdown.
+    If eval_id is None, returns results for the latest evaluation.
+    """
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        if eval_id is None:
+            # Get latest eval_id
+            cursor = await db.execute(
+                'SELECT id FROM evaluation_results ORDER BY id DESC LIMIT 1'
+            )
+            row = await cursor.fetchone()
+            if not row:
+                return []
+            eval_id = row['id']
+
+        cursor = await db.execute(
+            'SELECT * FROM evaluation_query_results WHERE eval_id = ? ORDER BY id',
+            (eval_id,),
+        )
+        rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
