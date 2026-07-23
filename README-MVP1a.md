@@ -4,6 +4,8 @@ Extends MVP1 with live/near-real-time market data from multiple configurable sou
 
 **Status:** ✅ Specs Complete — Ready to build (after MVP1 gate)
 
+> **Note:** Playwright E2E test specs for MVP1a features (`admin-data-sources.spec.js`, `data-source-selector.spec.js`, `live-price-banner.spec.js`, `mvp1a-integration.spec.js`, `usage-limits-panel.spec.js`) have been written ahead of implementation as part of the MVP1b T5 Playwright effort. These tests will pass once the backend + frontend code is built.
+
 ---
 
 ## Prerequisite

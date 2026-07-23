@@ -1,6 +1,6 @@
 # Product Overview
 
-The Bullish Stock Predictor is a full-stack application for Indian equity markets (BSE and NSE). Given a user-supplied list of stock tickers, it fetches historical price data, computes five standard technical indicators, and ranks the **top 10 most bullish stocks** for the next 30-day outlook using a rule-based composite scoring model.
+The Bullish Stock Predictor is a full-stack application for Indian equity markets (BSE and NSE). Given a user-supplied list of stock tickers, it fetches historical price data, computes five standard technical indicators, and ranks the **most bullish stocks** for the next 30-day outlook using a rule-based composite scoring model.
 
 ## Core Purpose
 
@@ -9,12 +9,12 @@ The Bullish Stock Predictor is a full-stack application for Indian equity market
 - Compute RSI, MACD, Bollinger Bands, Moving Averages (SMA/EMA), and Volume Trend
 - Assign each ticker a **Bullish Score (0–100)** from five equal-weight sub-scores (0–20 each)
 - Derive a **Confidence Level** (High / Medium / Low) and a **30-day Projected Price Range**
-- Return the top-10 ranked tickers via a **FastAPI** REST backend with **Swagger UI** at `/docs`
-- Render results in a **React + AWS Cloudscape Design System** frontend (professional, Amazon-style UI)
+- Return all ranked tickers (sorted by score) via a **FastAPI** REST backend with **Swagger UI** at `/docs`
+- Render results in a **React + AWS Cloudscape Design System** frontend (professional, Amazon-style UI; paginated at 10 per page)
 
 ## Key Features
 
-- **Top-10 ranked table**: Ticker, Bullish Score, Confidence Badge, RSI/MACD/BB/MA/Volume signals, 30-day price range
+- **Top-ranked results table**: Ticker, Bullish Score, Confidence Badge, RSI/MACD/BB/MA/Volume signals, 30-day price range (paginated at 10 per page)
 - **Per-stock detail drawer**: Full indicator breakdown with sub-scores, signal explanations, and a 90-day price chart (Recharts line chart with SMA-50 and SMA-200 overlays)
 - **Swagger UI** (`/docs`) and **ReDoc** (`/redoc`) for interactive API exploration
 - **In-memory session cache** — scored tickers are cached per server session for instant detail lookups
@@ -57,5 +57,5 @@ Import via `from data.tickers import NSE_TICKERS, NIFTY_50, BSE_TICKERS` etc.
 - MVP uses **rule-based scoring only** — no ML model training in this iteration
 - Data source is **yfinance exclusively** — no paid data feeds
 - Backend cache is **in-memory** — no database or persistent storage
-- Maximum **200 tickers** per analysis request
+- Maximum **500 tickers** per analysis request
 - Minimum **50 trading days** of data required per ticker; tickers with less are excluded

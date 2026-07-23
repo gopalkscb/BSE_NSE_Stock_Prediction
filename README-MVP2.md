@@ -4,6 +4,8 @@
 
 ## Status: 📋 Planned
 
+> **Note:** Playwright E2E test specs for MVP2 features (`mvp2-admin-dashboard.spec.js`, `mvp2-security.spec.js`, `mvp2-weighted-scoring.spec.js`) have been written ahead of implementation as part of the MVP1b T5 Playwright effort. These tests will pass once the MVP2 code is built.
+
 ## Spec Files
 - [Requirements](.kiro/specs/mvp2-deep-analysis/requirements.md)
 - [Design](.kiro/specs/mvp2-deep-analysis/design.md)

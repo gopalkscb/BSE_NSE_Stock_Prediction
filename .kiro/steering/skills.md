@@ -18,7 +18,7 @@ description: MVP1 rules-based web screener with 5 indicators, FastAPI backend, R
 - Observability tab: Live Metrics panel, Error Log panel, FAQ/Debug Guide panel
 - SQLite-backed observability store (`data/observability.db`) — metrics, errors, ticker health
 - In-memory session cache for scored results
-- Static FAQ knowledge base (`docs/faq.json` — 4 categories, 28+ entries)
+- Static FAQ knowledge base (`docs/faq.json` — 5 categories, 28+ entries)
 - Basic smoke tests only (1–3 per module); heavy testing deferred to MVP1b (in MVP3 scope)
 
 ## Key Commands

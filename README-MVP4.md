@@ -4,6 +4,8 @@
 
 ## Status: 📋 Planned
 
+> **Note:** A Playwright E2E test spec for the RAG chat panel (`mvp4-rag-chat.spec.js`) has been written ahead of implementation as part of the MVP1b T5 Playwright effort. This test will pass once the MVP4 frontend code is built.
+
 ## Spec Files
 - [Requirements](.kiro/specs/mvp4-live-rag/requirements.md)
 - [Design](.kiro/specs/mvp4-live-rag/design.md)

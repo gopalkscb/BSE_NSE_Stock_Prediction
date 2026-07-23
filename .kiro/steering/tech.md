@@ -21,19 +21,19 @@
 
 ## Frontend Libraries (in `frontend/package.json`)
 
-| Purpose | Library | Version |
-|---|---|---|
-| UI framework | `react` + `react-dom` | ^18.3.0 |
-| Build tool | `vite` | ^5.x |
-| UI component library | `@cloudscape-design/components` | ^3.0.0 |
-| Cloudscape global styles | `@cloudscape-design/global-styles` | ^1.0.0 |
-| Charts | `recharts` | ^2.12.0 |
-| HTTP client | `axios` | ^1.7.0 |
-| JS unit tests | `vitest` | ^1.6.0 |
-| Component testing | `@testing-library/react` | ^15.0.0 |
-| User interaction testing | `@testing-library/user-event` | ^14.0.0 |
-| DOM environment | `jsdom` | ^24.0.0 |
-| E2E / browser tests | `@playwright/test` | ^1.44.0 |
+| Purpose | Library | Version | Status |
+|---|---|---|---|
+| UI framework | `react` + `react-dom` | ^18.3.0 | ✅ Installed |
+| Build tool | `vite` | ^5.x | ✅ Installed |
+| UI component library | `@cloudscape-design/components` | ^3.0.0 | ✅ Installed |
+| Cloudscape global styles | `@cloudscape-design/global-styles` | ^1.0.0 | ✅ Installed |
+| Charts | `recharts` | ^2.12.0 | ✅ Installed |
+| HTTP client | `axios` | ^1.7.0 | ✅ Installed |
+| E2E / browser tests | `@playwright/test` | ^1.61.1 | ✅ Installed |
+| JS unit tests | `vitest` | ^1.6.0 | 📋 Planned (MVP1b) |
+| Component testing | `@testing-library/react` | ^15.0.0 | 📋 Planned (MVP1b) |
+| User interaction testing | `@testing-library/user-event` | ^14.0.0 | 📋 Planned (MVP1b) |
+| DOM environment | `jsdom` | ^24.0.0 | 📋 Planned (MVP1b) |
 
 ## API Documentation
 - **Swagger UI** is available at `http://localhost:8000/docs` when the backend is running
@@ -43,8 +43,13 @@
 
 ## Testing Strategy
 
+### Current state (as of 2026-07-23)
+- **Python**: 8 test files (smoke tests, 1–3 per module) — all GREEN
+- **Playwright E2E**: 15 spec files with ~107 tests written (covers MVP1, MVP1a, MVP2, MVP4 scenarios) — `@playwright/test` ^1.61.1 installed
+- **Vitest / React Testing Library**: NOT yet installed — planned for MVP1b
+
 ### MVP1 scope (basic smoke tests only)
-MVP1 uses basic pytest smoke tests (1–3 per module) with a lite gate rule: each module needs at least 1 passing test before proceeding. No property-based tests, no Playwright E2E, no frontend unit tests in MVP1.
+MVP1 uses basic pytest smoke tests (1–3 per module) with a lite gate rule: each module needs at least 1 passing test before proceeding. No property-based tests, no frontend unit tests in MVP1.
 
 ### MVP1b / MVP2+ scope (full test infrastructure)
 The following full testing stack is used from MVP1b (test hardening, tracked in MVP3 scope) onward:

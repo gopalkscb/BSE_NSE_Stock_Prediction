@@ -1,8 +1,10 @@
 # MVP1 — Bullish Stock Screener
 
-> Rules-based web screener: 5 indicators, top-10 ranking, React + Cloudscape UI
+> Rules-based web screener: 5 indicators, all results ranked by bullish score (paginated at 10/page), React + Cloudscape UI with custom teal theme
 
-## Status: 🟡 In Progress
+## Status: ✅ Deployed (~85%)
+
+Backend and frontend fully functional. 27 Python tests passing. Custom green-blue teal theme with DM Sans font. Playwright E2E tests written (119 tests across 15 files). Remaining ~15% is polish and minor fixes.
 
 ## Spec Files
 - [Requirements](.kiro/specs/mvp1-bullish-screener/requirements.md)
@@ -13,13 +15,14 @@
 
 ## What It Does
 
-- Accepts comma-separated BSE/NSE tickers (`.NS` / `.BO` suffix)
+- Accepts comma-separated BSE/NSE tickers (`.NS` / `.BO` suffix, max 500)
 - Fetches 1 year daily OHLCV via yfinance
 - Computes 5 indicators: RSI(14), MACD(12/26/9), Bollinger Bands(20/2σ), SMA-50/SMA-200, Volume Trend 5d/20d
 - Assigns Bullish Score (0–100) with Confidence Level (High/Medium/Low)
-- Returns top-10 ranked results with 30-day projected price range
+- Returns **all** ranked results with 30-day projected price range (frontend paginates at 10/page)
 - Provides per-stock detail drawer with 90-day price chart (SMA overlays)
-- Basic observability: `GET /health` endpoint + `structlog` JSON request logging
+- Observability tab: Live Metrics panel, Error Log panel, FAQ/Debug Guide panel (5 categories)
+- SQLite-backed observability store for metrics, errors, and ticker health
 
 ---
 
@@ -30,11 +33,11 @@
 | Backend | Python 3.x, FastAPI, Uvicorn |
 | Data | yfinance, pandas, numpy |
 | Frontend | React 18, Vite, AWS Cloudscape Design System |
+| Custom Theme | Green-blue teal palette, DM Sans font |
 | Charts | Recharts |
 | API Docs | Swagger UI (`/docs`), ReDoc (`/redoc`) |
-| Python Tests | pytest, hypothesis (property-based) |
-| JS Tests | Vitest, React Testing Library |
-| E2E Tests | Playwright |
+| Python Tests | pytest, pytest-asyncio |
+| E2E Tests | Playwright (119 tests, 15 spec files, 6 projects) |
 | Linting | ruff (Python), ESLint (JS) |
 
 ---
@@ -62,8 +65,12 @@ npm run dev
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/api/v1/analyze` | Submit tickers, get top-10 bullish ranking |
+| `POST` | `/api/v1/analyze` | Submit tickers, get all results ranked by bullish score |
 | `GET` | `/api/v1/ticker/{ticker}` | Get full indicator detail for a scored ticker |
+| `GET` | `/api/v1/observability/metrics` | Live metrics (request counts, durations) |
+| `GET` | `/api/v1/observability/errors` | Error log (paginated) |
+| `GET` | `/api/v1/observability/health` | Ticker health status |
+| `GET` | `/api/v1/observability/faq` | FAQ/Debug Guide (5 categories) |
 | `GET` | `/health` | Health check (always 200, no auth) |
 | `GET` | `/docs` | Swagger UI |
 | `GET` | `/redoc` | ReDoc API documentation |
@@ -73,14 +80,11 @@ npm run dev
 ## Running Tests
 
 ```bash
-# Python
+# Python (27 tests passing)
 pytest tests/ -v
 pytest tests/ --cov=src --cov-report=term-missing
 
-# JavaScript
-cd frontend && npx vitest run
-
-# E2E (both servers must be running)
+# E2E (119 tests across 15 spec files, 6 Playwright projects)
 cd frontend && npx playwright test
 ```
 

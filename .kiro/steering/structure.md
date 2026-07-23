@@ -34,19 +34,21 @@ BSE_NSE_Stock_Prediction/
 │
 ├── tests/                          # pytest test suite
 │   ├── __init__.py
-│   ├── conftest.py                 # Shared fixtures (synthetic OHLCV factory, mocks)
 │   ├── test_models.py              # Pydantic model validation
-│   ├── test_swagger.py             # Swagger UI + OpenAPI schema tests
-│   ├── test_fetch.py               # Data fetcher unit + property tests
-│   ├── test_indicators.py          # Indicator calculator unit + property tests
-│   ├── test_scorer.py              # Scorer unit + property tests
-│   ├── test_cache.py               # Cache unit tests
+│   ├── test_fetch.py               # Data fetcher unit tests
+│   ├── test_indicators.py          # Indicator calculator unit tests
+│   ├── test_scorer.py              # Scorer unit tests
 │   ├── test_api.py                 # Route unit tests (httpx AsyncClient)
-│   └── test_integration_backend.py # Full backend integration tests
+│   ├── test_observability_store.py # Observability SQLite store tests
+│   ├── test_observability_middleware.py # Middleware unit tests
+│   └── test_faq.py                 # FAQ endpoint tests
 │
 ├── frontend/                       # React + Cloudscape frontend
 │   ├── src/
 │   │   ├── App.jsx                 # Root component; imports Cloudscape global styles
+│   │   ├── theme.css               # Custom theme overrides and global styling
+│   │   ├── data/
+│   │   │   └── tickerPresets.js    # Pre-built ticker list presets (NIFTY_50, SENSEX_30, etc.)
 │   │   ├── api/
 │   │   │   ├── stockApi.js         # analyzeStocks(), getTickerDetail()
 │   │   │   └── observabilityApi.js # getMetrics(), getErrors(), getTickerHealth(), getFaq()
@@ -58,13 +60,23 @@ BSE_NSE_Stock_Prediction/
 │   │       ├── StockDetailDrawer.jsx # Indicator breakdown + Recharts price chart
 │   │       ├── MetricsPanel.jsx    # Live metrics cards + ticker health table
 │   │       ├── ErrorLogPanel.jsx   # Paginated error/warning log table
-│   │       └── FaqPanel.jsx        # Searchable FAQ accordion (4 categories)
-│   ├── e2e/                        # Playwright E2E test suites (MVP1b+)
-│   │   ├── ticker-input.spec.js
-│   │   ├── analysis-page.spec.js
-│   │   ├── stock-detail-drawer.spec.js
-│   │   ├── observability.spec.js   # Observability tab E2E tests
-│   │   └── full-stack.spec.js      # Live backend + frontend integration
+│   │       └── FaqPanel.jsx        # Searchable FAQ accordion (5 categories)
+│   ├── e2e/                        # Playwright E2E test suites (15 spec files)
+│   │   ├── ticker-input.spec.js           # Ticker input form tests
+│   │   ├── analysis-page.spec.js          # Analysis results page tests
+│   │   ├── stock-detail-drawer.spec.js    # Detail drawer tests
+│   │   ├── observability.spec.js          # Observability tab tests
+│   │   ├── observability-full-stack.spec.js # Observability live integration
+│   │   ├── full-stack.spec.js             # Live backend + frontend integration
+│   │   ├── admin-data-sources.spec.js     # MVP1a: admin data source management
+│   │   ├── data-source-selector.spec.js   # MVP1a: source selector UI
+│   │   ├── live-price-banner.spec.js      # MVP1a: live price display
+│   │   ├── mvp1a-integration.spec.js      # MVP1a: full integration
+│   │   ├── usage-limits-panel.spec.js     # MVP1a: usage & limits panel
+│   │   ├── mvp2-admin-dashboard.spec.js   # MVP2: admin dashboard
+│   │   ├── mvp2-security.spec.js          # MVP2: security features
+│   │   ├── mvp2-weighted-scoring.spec.js  # MVP2: weighted scoring UI
+│   │   └── mvp4-rag-chat.spec.js          # MVP4: RAG chat panel
 │   ├── playwright.config.js
 │   ├── vite.config.js              # Dev proxy: /api → http://localhost:8000
 │   └── package.json
@@ -80,7 +92,7 @@ BSE_NSE_Stock_Prediction/
 │   └── processed/                  # Feature-engineered data (gitignored)
 │
 ├── docs/                           # Documentation and knowledge base
-│   └── faq.json                    # Static FAQ: 4 categories, 28+ entries (committed)
+│   └── faq.json                    # Static FAQ: 5 categories, 28+ entries (committed)
 │
 ├── notebooks/                      # Jupyter notebooks for EDA (exploration only)
 │

@@ -1,6 +1,6 @@
 # BSE/NSE Bullish Stock Predictor
 
-A full-stack application that analyses BSE and NSE stock tickers using technical indicators and ranks the **top 10 most bullish stocks** for a 30-day outlook.
+A full-stack application that analyses BSE and NSE stock tickers using technical indicators and ranks them by **bullish score** for a 30-day outlook.
 
 ---
 
@@ -10,9 +10,9 @@ This project evolves across six MVPs, each building on the previous:
 
 | MVP | Focus | Status | README |
 |---|---|---|---|
-| **MVP1** | Rules-based web screener (5 indicators) | 🟡 In Progress | [README-MVP1.md](README-MVP1.md) |
+| **MVP1** | Rules-based web screener (5 indicators) | ✅ Deployed (85%) | [README-MVP1.md](README-MVP1.md) |
 | **MVP1a** | Live data polling (multi-source, admin, consumption) | ✅ Specs Complete | [README-MVP1a.md](README-MVP1a.md) |
-| **MVP1b** | Test hardening (property + unit + integration + E2E) | 📋 Planned | [README-MVP1b.md](README-MVP1b.md) |
+| **MVP1b** | Test hardening (property + unit + integration + E2E) | 🟡 Partial (E2E done) | [README-MVP1b.md](README-MVP1b.md) |
 | **MVP2** | Deep-dive analysis (11 indicators, security, observability) | 📋 Planned | [README-MVP2.md](README-MVP2.md) |
 | **MVP3** | Native mobile app (Android + iOS) | 📋 Planned | [README-MVP3.md](README-MVP3.md) |
 | **MVP4** | Live data + RAG intelligence (Pinecone, OpenAI, hybrid retrieval) | 📋 Planned | [README-MVP4.md](README-MVP4.md) |
@@ -126,7 +126,7 @@ pytest tests/ --cov=src --cov-report=term-missing
 # JavaScript (MVP1/MVP2 web)
 cd frontend && npx vitest run
 
-# E2E (MVP1b test hardening / MVP2 web — deferred from MVP1)
+# E2E (119 tests across 15 spec files, 6 Playwright projects)
 cd frontend && npx playwright test
 
 # Mobile E2E (MVP3)
@@ -175,7 +175,7 @@ Create a `.env` file at the project root — never commit it.
 
 - **NSE**: `RELIANCE.NS`, `TCS.NS`, `INFY.NS`
 - **BSE**: `500325.BO`, `RELIANCE.BO`
-- Max 200 tickers per request
+- Max 500 tickers per request
 - Min 50 trading days of data required per ticker
 
 ---
